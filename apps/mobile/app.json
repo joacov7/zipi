@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "Zipi",
+    "slug": "zipi",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#f5b220"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "ar.zipi.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Zipi necesita tu ubicación para encontrar conductores cercanos.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Los conductores necesitan compartir su ubicación en tiempo real."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#f5b220"
+      },
+      "package": "ar.zipi.app",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Zipi necesita tu ubicación para el servicio."
+        }
+      ]
+    ],
+    "scheme": "zipi",
+    "extra": {
+      "eas": {
+        "projectId": "zipi-app-project-id"
+      }
+    }
+  }
+}

@@ -1,0 +1,146 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  phone     String   @unique
+  password  String
+  role      UserRole @default(PASSENGER)
+  avatarUrl String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  driver        Driver?
+  tripsAsPassenger Trip[]     @relation("PassengerTrips")
+  deliveriesAsSender Delivery[] @relation("SenderDeliveries")
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("refresh_tokens")
+}
+
+model Driver {
+  id           String      @id @default(uuid())
+  userId       String      @unique
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicleType  VehicleType
+  vehiclePlate String      @unique
+  vehicleModel String
+  vehicleYear  Int
+  vehicleColor String
+  licenseNumber String     @unique
+  isAvailable  Boolean     @default(false)
+  isVerified   Boolean     @default(false)
+  currentLat   Float?
+  currentLng   Float?
+  currentHeading Float?
+  rating       Float       @default(5.0)
+  totalTrips   Int         @default(0)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  trips      Trip[]
+  deliveries Delivery[]
+
+  @@map("drivers")
+}
+
+model Trip {
+  id              String     @id @default(uuid())
+  passengerId     String
+  passenger       User       @relation("PassengerTrips", fields: [passengerId], references: [id])
+  driverId        String?
+  driver          Driver?    @relation(fields: [driverId], references: [id])
+  originLat       Float
+  originLng       Float
+  originAddress   String
+  destLat         Float
+  destLng         Float
+  destAddress     String
+  status          TripStatus @default(PENDING)
+  estimatedPrice  Float
+  finalPrice      Float?
+  estimatedMinutes Int?
+  distanceKm      Float?
+  passengerRating Int?
+  driverRating    Int?
+  cancelReason    String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@map("trips")
+}
+
+model Delivery {
+  id                 String         @id @default(uuid())
+  senderId           String
+  sender             User           @relation("SenderDeliveries", fields: [senderId], references: [id])
+  driverId           String?
+  driver             Driver?        @relation(fields: [driverId], references: [id])
+  pickupLat          Float
+  pickupLng          Float
+  pickupAddress      String
+  dropoffLat         Float
+  dropoffLng         Float
+  dropoffAddress     String
+  packageDescription String
+  recipientName      String
+  recipientPhone     String
+  status             DeliveryStatus @default(PENDING)
+  estimatedPrice     Float
+  finalPrice         Float?
+  senderRating       Int?
+  driverRating       Int?
+  cancelReason       String?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  @@map("deliveries")
+}
+
+enum UserRole {
+  PASSENGER
+  DRIVER
+  ADMIN
+}
+
+enum VehicleType {
+  CAR
+  MOTORCYCLE
+}
+
+enum TripStatus {
+  PENDING
+  ACCEPTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum DeliveryStatus {
+  PENDING
+  ACCEPTED
+  PICKED_UP
+  IN_TRANSIT
+  DELIVERED
+  CANCELLED
+}
