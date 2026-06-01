@@ -1,4 +1,14 @@
-import { DeliveryStatus, ServiceType, TripStatus, UserRole, VehicleType } from './enums';
+import {
+  DeliveryStatus,
+  FreightService,
+  FreightStatus,
+  MachineryType,
+  ServiceType,
+  TripStatus,
+  TruckType,
+  UserRole,
+  VehicleType,
+} from './enums';
 
 export interface Coordinates {
   lat: number;
@@ -120,4 +130,39 @@ export interface PriceEstimate {
     distanceFare: number;
     timeFare: number;
   };
+}
+
+// Freight (camiones y maquinaria)
+export interface FreightRequestDto {
+  id: string;
+  requester: UserPublic;
+  driver?: DriverPublic;
+  serviceType: FreightService;
+  pickupAddress: string;
+  dropoffAddress: string;
+  cargoDescription: string;
+  estimatedWeightTons?: number;
+  estimatedHours?: number;
+  distanceKm?: number;
+  requiresRefrigeration: boolean;
+  specialRequirements?: string;
+  status: FreightStatus;
+  estimatedPrice: number;
+  finalPrice?: number;
+  requesterRating?: number;
+  driverRating?: number;
+  cancelReason?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FreightPriceEstimate {
+  estimatedPrice: number;
+  distanceKm: number;
+  breakdown: {
+    baseFare: number;
+    distanceFare: number;
+    hourlyFare?: number;
+  };
+  notes?: string;
 }

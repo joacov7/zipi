@@ -13,6 +13,7 @@ import {
   Users,
   Truck,
   MapPin,
+  Hammer,
 } from 'lucide-react';
 
 interface NavItem {
@@ -41,6 +42,7 @@ function getNavItems(role: string): NavItem[] {
     { to: '/home', label: 'Inicio', icon: <Home size={20} /> },
     { to: '/request-trip', label: 'Pedir Remis', icon: <Car size={20} /> },
     { to: '/request-delivery', label: 'Motomandado', icon: <Package size={20} /> },
+    { to: '/request-freight', label: 'Fletes / Maquinaria', icon: <Truck size={20} /> },
     { to: '/history', label: 'Historial', icon: <History size={20} /> },
   ];
 }

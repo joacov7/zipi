@@ -19,10 +19,11 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  driver        Driver?
-  tripsAsPassenger Trip[]     @relation("PassengerTrips")
-  deliveriesAsSender Delivery[] @relation("SenderDeliveries")
-  refreshTokens RefreshToken[]
+  driver              Driver?
+  tripsAsPassenger    Trip[]          @relation("PassengerTrips")
+  deliveriesAsSender  Delivery[]      @relation("SenderDeliveries")
+  freightAsRequester  FreightRequest[] @relation("RequesterFreight")
+  refreshTokens       RefreshToken[]
 
   @@map("users")
 }
@@ -58,10 +59,48 @@ model Driver {
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
-  trips      Trip[]
-  deliveries Delivery[]
+  trips          Trip[]
+  deliveries     Delivery[]
+  freightRequests FreightRequest[]
+
+  // Campos extras para camiones/maquinaria
+  truckType      TruckType?
+  machineryType  MachineryType?
+  capacityTons   Float?
+  hasRefrigeration Boolean @default(false)
 
   @@map("drivers")
+}
+
+model FreightRequest {
+  id                  String         @id @default(uuid())
+  requesterId         String
+  requester           User           @relation("RequesterFreight", fields: [requesterId], references: [id])
+  driverId            String?
+  driver              Driver?        @relation(fields: [driverId], references: [id])
+  serviceType         FreightService
+  pickupLat           Float
+  pickupLng           Float
+  pickupAddress       String
+  dropoffLat          Float
+  dropoffLng          Float
+  dropoffAddress      String
+  cargoDescription    String
+  estimatedWeightTons Float?
+  estimatedHours      Float?
+  distanceKm          Float?
+  requiresRefrigeration Boolean      @default(false)
+  specialRequirements String?
+  status              FreightStatus  @default(PENDING)
+  estimatedPrice      Float
+  finalPrice          Float?
+  requesterRating     Int?
+  driverRating        Int?
+  cancelReason        String?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  @@map("freight_requests")
 }
 
 model Trip {
@@ -126,6 +165,37 @@ enum UserRole {
 enum VehicleType {
   CAR
   MOTORCYCLE
+  TRUCK
+  HEAVY_MACHINERY
+}
+
+enum TruckType {
+  PICKUP
+  SMALL_TRUCK
+  LARGE_TRUCK
+  SEMI
+}
+
+enum MachineryType {
+  EXCAVATOR
+  CRANE
+  BULLDOZER
+  FORKLIFT
+  CONCRETE_MIXER
+  COMPACTOR
+}
+
+enum FreightService {
+  FLETE
+  MACHINERY
+}
+
+enum FreightStatus {
+  PENDING
+  ACCEPTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
 }
 
 enum TripStatus {

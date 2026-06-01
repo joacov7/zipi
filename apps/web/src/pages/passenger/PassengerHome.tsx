@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../../stores/auth.store';
-import { Car, Package, History, Star, Clock } from 'lucide-react';
+import { Car, Package, History, Star, Clock, Truck } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 
@@ -25,7 +25,7 @@ export default function PassengerHome() {
       </div>
 
       {/* Service cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <Link
           to="/request-trip"
           className="group card hover:shadow-md hover:border-zipi-200 transition-all cursor-pointer"
@@ -58,6 +58,24 @@ export default function PassengerHome() {
                 Enviá paquetes y documentos en moto
               </p>
               <p className="text-blue-600 font-medium text-sm mt-2">Desde $1.500 →</p>
+            </div>
+          </div>
+        </Link>
+
+        <Link
+          to="/request-freight"
+          className="group card hover:shadow-md hover:border-amber-200 transition-all cursor-pointer"
+        >
+          <div className="flex items-start gap-4">
+            <div className="w-14 h-14 bg-amber-100 group-hover:bg-amber-200 rounded-2xl flex items-center justify-center transition-colors">
+              <Truck size={28} className="text-amber-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-gray-900 text-lg">Fletes y Maquinaria</h3>
+              <p className="text-gray-500 text-sm mt-1">
+                Camiones, excavadoras, grúas y más
+              </p>
+              <p className="text-amber-600 font-medium text-sm mt-2">Desde $8.000 →</p>
             </div>
           </div>
         </Link>

@@ -1,6 +1,6 @@
 import { IsString, IsEnum, IsInt, Min, Max, IsNumber, IsOptional, IsBoolean } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { VehicleType } from '@prisma/client';
+import { MachineryType, TruckType, VehicleType } from '@prisma/client';
 
 export class CreateDriverProfileDto {
   @ApiProperty({ enum: VehicleType })
@@ -17,7 +17,7 @@ export class CreateDriverProfileDto {
 
   @ApiProperty({ example: 2022 })
   @IsInt()
-  @Min(2000)
+  @Min(1990)
   @Max(2030)
   vehicleYear: number;
 
@@ -28,6 +28,28 @@ export class CreateDriverProfileDto {
   @ApiProperty({ example: 'LIC-001' })
   @IsString()
   licenseNumber: string;
+
+  // Campos extra para camiones
+  @ApiPropertyOptional({ enum: TruckType, description: 'Requerido si vehicleType = TRUCK' })
+  @IsEnum(TruckType)
+  @IsOptional()
+  truckType?: TruckType;
+
+  @ApiPropertyOptional({ description: 'Capacidad en toneladas (camiones)' })
+  @IsNumber()
+  @IsOptional()
+  capacityTons?: number;
+
+  @ApiPropertyOptional({ description: '¿Tiene refrigeración?' })
+  @IsBoolean()
+  @IsOptional()
+  hasRefrigeration?: boolean;
+
+  // Campos extra para maquinaria
+  @ApiPropertyOptional({ enum: MachineryType, description: 'Requerido si vehicleType = HEAVY_MACHINERY' })
+  @IsEnum(MachineryType)
+  @IsOptional()
+  machineryType?: MachineryType;
 }
 
 export class UpdateLocationDto {

@@ -12,6 +12,7 @@ import RequestTrip from './pages/passenger/RequestTrip';
 import RequestDelivery from './pages/passenger/RequestDelivery';
 import TripTracking from './pages/passenger/TripTracking';
 import PassengerHistory from './pages/passenger/PassengerHistory';
+import RequestFreight from './pages/passenger/RequestFreight';
 
 // Driver
 import DriverHome from './pages/driver/DriverHome';
@@ -89,6 +90,16 @@ export default function App() {
           <PrivateRoute roles={[UserRole.PASSENGER]}>
             <Layout>
               <TripTracking />
+            </Layout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/request-freight"
+        element={
+          <PrivateRoute roles={[UserRole.PASSENGER]}>
+            <Layout>
+              <RequestFreight />
             </Layout>
           </PrivateRoute>
         }

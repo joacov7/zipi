@@ -7,6 +7,37 @@ export enum UserRole {
 export enum VehicleType {
   CAR = 'CAR',
   MOTORCYCLE = 'MOTORCYCLE',
+  TRUCK = 'TRUCK',
+  HEAVY_MACHINERY = 'HEAVY_MACHINERY',
+}
+
+export enum TruckType {
+  PICKUP = 'PICKUP',
+  SMALL_TRUCK = 'SMALL_TRUCK',
+  LARGE_TRUCK = 'LARGE_TRUCK',
+  SEMI = 'SEMI',
+}
+
+export enum MachineryType {
+  EXCAVATOR = 'EXCAVATOR',
+  CRANE = 'CRANE',
+  BULLDOZER = 'BULLDOZER',
+  FORKLIFT = 'FORKLIFT',
+  CONCRETE_MIXER = 'CONCRETE_MIXER',
+  COMPACTOR = 'COMPACTOR',
+}
+
+export enum FreightService {
+  FLETE = 'FLETE',
+  MACHINERY = 'MACHINERY',
+}
+
+export enum FreightStatus {
+  PENDING = 'PENDING',
+  ACCEPTED = 'ACCEPTED',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
 }
 
 export enum TripStatus {
@@ -29,6 +60,8 @@ export enum DeliveryStatus {
 export enum ServiceType {
   REMIS = 'REMIS',
   MOTO = 'MOTO',
+  FLETE = 'FLETE',
+  MACHINERY = 'MACHINERY',
 }
 
 export enum SocketEvent {
@@ -52,6 +85,12 @@ export enum SocketEvent {
   DELIVERY_PICKED_UP = 'delivery:picked_up',
   DELIVERY_COMPLETED = 'delivery:completed',
   DELIVERY_CANCELLED = 'delivery:cancelled',
+
+  // Freight events
+  FREIGHT_REQUEST = 'freight:request',
+  FREIGHT_ACCEPTED = 'freight:accepted',
+  FREIGHT_COMPLETED = 'freight:completed',
+  FREIGHT_CANCELLED = 'freight:cancelled',
 
   // Location tracking
   LOCATION_UPDATE = 'location:update',

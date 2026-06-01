@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { TripStatus, DeliveryStatus } from '@prisma/client';
+import { TripStatus, DeliveryStatus, FreightStatus } from '@prisma/client';
 
 @Injectable()
 export class AdminService {
@@ -11,14 +11,20 @@ export class AdminService {
       totalUsers,
       totalDrivers,
       activeDrivers,
+      truckDrivers,
+      machineryDrivers,
       totalTrips,
       activeTrips,
       totalDeliveries,
       activeDeliveries,
+      totalFreights,
+      activeFreights,
     ] = await this.prisma.$transaction([
       this.prisma.user.count({ where: { role: 'PASSENGER' } }),
       this.prisma.driver.count(),
       this.prisma.driver.count({ where: { isAvailable: true } }),
+      this.prisma.driver.count({ where: { vehicleType: 'TRUCK' } }),
+      this.prisma.driver.count({ where: { vehicleType: 'HEAVY_MACHINERY' } }),
       this.prisma.trip.count(),
       this.prisma.trip.count({
         where: { status: { in: [TripStatus.PENDING, TripStatus.ACCEPTED, TripStatus.IN_PROGRESS] } },
@@ -27,36 +33,41 @@ export class AdminService {
       this.prisma.delivery.count({
         where: {
           status: {
-            in: [
-              DeliveryStatus.PENDING,
-              DeliveryStatus.ACCEPTED,
-              DeliveryStatus.PICKED_UP,
-              DeliveryStatus.IN_TRANSIT,
-            ],
+            in: [DeliveryStatus.PENDING, DeliveryStatus.ACCEPTED, DeliveryStatus.PICKED_UP, DeliveryStatus.IN_TRANSIT],
           },
         },
       }),
+      this.prisma.freightRequest.count(),
+      this.prisma.freightRequest.count({
+        where: { status: { in: [FreightStatus.PENDING, FreightStatus.ACCEPTED, FreightStatus.IN_PROGRESS] } },
+      }),
     ]);
 
-    const revenueResult = await this.prisma.trip.aggregate({
-      _sum: { finalPrice: true },
-      where: { status: TripStatus.COMPLETED },
-    });
-
-    const deliveryRevenueResult = await this.prisma.delivery.aggregate({
-      _sum: { finalPrice: true },
-      where: { status: DeliveryStatus.DELIVERED },
-    });
+    const [tripRevenue, deliveryRevenue, freightRevenue] = await this.prisma.$transaction([
+      this.prisma.trip.aggregate({ _sum: { finalPrice: true }, where: { status: TripStatus.COMPLETED } }),
+      this.prisma.delivery.aggregate({ _sum: { finalPrice: true }, where: { status: DeliveryStatus.DELIVERED } }),
+      this.prisma.freightRequest.aggregate({ _sum: { finalPrice: true }, where: { status: FreightStatus.COMPLETED } }),
+    ]);
 
     return {
       users: { total: totalUsers },
-      drivers: { total: totalDrivers, active: activeDrivers },
+      drivers: {
+        total: totalDrivers,
+        active: activeDrivers,
+        trucks: truckDrivers,
+        machinery: machineryDrivers,
+      },
       trips: { total: totalTrips, active: activeTrips },
       deliveries: { total: totalDeliveries, active: activeDeliveries },
+      freights: { total: totalFreights, active: activeFreights },
       revenue: {
-        trips: revenueResult._sum.finalPrice ?? 0,
-        deliveries: deliveryRevenueResult._sum.finalPrice ?? 0,
-        total: (revenueResult._sum.finalPrice ?? 0) + (deliveryRevenueResult._sum.finalPrice ?? 0),
+        trips: tripRevenue._sum.finalPrice ?? 0,
+        deliveries: deliveryRevenue._sum.finalPrice ?? 0,
+        freights: freightRevenue._sum.finalPrice ?? 0,
+        total:
+          (tripRevenue._sum.finalPrice ?? 0) +
+          (deliveryRevenue._sum.finalPrice ?? 0) +
+          (freightRevenue._sum.finalPrice ?? 0),
       },
     };
   }
@@ -178,5 +189,26 @@ export class AdminService {
     ]);
 
     return { data: deliveries, total, page, limit, totalPages: Math.ceil(total / limit) };
+  }
+
+  async listFreights(page = 1, limit = 20, status?: FreightStatus) {
+    const skip = (page - 1) * limit;
+    const where = status ? { status } : {};
+
+    const [freights, total] = await this.prisma.$transaction([
+      this.prisma.freightRequest.findMany({
+        where,
+        include: {
+          requester: { select: { id: true, name: true, phone: true } },
+          driver: { include: { user: { select: { id: true, name: true, phone: true } } } },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.freightRequest.count({ where }),
+    ]);
+
+    return { data: freights, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 }

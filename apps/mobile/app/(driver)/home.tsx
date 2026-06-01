@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   Switch, Alert, ActivityIndicator,
@@ -7,13 +7,14 @@ import { useRouter } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../src/services/api';
 import { useAuthStore } from '../../src/stores/auth.store';
+import { VehicleType } from '@zipi/shared';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function DriverHomeScreen() {
   const router = useRouter();
   const { logout } = useAuthStore();
   const queryClient = useQueryClient();
-  const [tab, setTab] = useState<'trips' | 'deliveries'>('trips');
+  const [tab, setTab] = useState<'trips' | 'deliveries' | 'freight'>('trips');
 
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ['driver-profile-mobile'],
@@ -54,6 +55,25 @@ export default function DriverHomeScreen() {
       Alert.alert('¡Envío aceptado!', 'Dirigite al punto de recogida.');
     },
   });
+
+  const { data: pendingFreights } = useQuery({
+    queryKey: ['pending-freights-mobile'],
+    queryFn: () => api.get('/freight/pending').then((r) => r.data),
+    enabled: tab === 'freight' && !!profile?.isAvailable,
+    refetchInterval: 8000,
+  });
+
+  const acceptFreight = useMutation({
+    mutationFn: (id: string) => api.post(`/freight/${id}/accept`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pending-freights-mobile'] });
+      Alert.alert('¡Solicitud aceptada!', 'Contactá al cliente para coordinar.');
+    },
+  });
+
+  const isTruckDriver =
+    profile?.vehicleType === VehicleType.TRUCK ||
+    profile?.vehicleType === VehicleType.HEAVY_MACHINERY;
 
   if (profileLoading) {
     return <View style={styles.loading}><ActivityIndicator size="large" color="#ef9008" /></View>;
@@ -112,25 +132,82 @@ export default function DriverHomeScreen() {
         <>
           {/* Tab selector */}
           <View style={styles.tabRow}>
-            <TouchableOpacity
-              style={[styles.tab, tab === 'trips' && styles.tabActive]}
-              onPress={() => setTab('trips')}
-            >
-              <Ionicons name="car" size={16} color={tab === 'trips' ? '#fff' : '#6b7280'} />
-              <Text style={[styles.tabText, tab === 'trips' && styles.tabTextActive]}>
-                Remises ({pendingTrips?.length ?? 0})
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tab, tab === 'deliveries' && { backgroundColor: '#3b82f6' }]}
-              onPress={() => setTab('deliveries')}
-            >
-              <Ionicons name="cube" size={16} color={tab === 'deliveries' ? '#fff' : '#6b7280'} />
-              <Text style={[styles.tabText, tab === 'deliveries' && styles.tabTextActive]}>
-                Mandados ({pendingDeliveries?.length ?? 0})
-              </Text>
-            </TouchableOpacity>
+            {!isTruckDriver && (
+              <TouchableOpacity
+                style={[styles.tab, tab === 'trips' && styles.tabActive]}
+                onPress={() => setTab('trips')}
+              >
+                <Ionicons name="car" size={16} color={tab === 'trips' ? '#fff' : '#6b7280'} />
+                <Text style={[styles.tabText, tab === 'trips' && styles.tabTextActive]}>
+                  Remises ({pendingTrips?.length ?? 0})
+                </Text>
+              </TouchableOpacity>
+            )}
+            {profile?.vehicleType === VehicleType.MOTORCYCLE && (
+              <TouchableOpacity
+                style={[styles.tab, tab === 'deliveries' && { backgroundColor: '#3b82f6' }]}
+                onPress={() => setTab('deliveries')}
+              >
+                <Ionicons name="cube" size={16} color={tab === 'deliveries' ? '#fff' : '#6b7280'} />
+                <Text style={[styles.tabText, tab === 'deliveries' && styles.tabTextActive]}>
+                  Mandados ({pendingDeliveries?.length ?? 0})
+                </Text>
+              </TouchableOpacity>
+            )}
+            {isTruckDriver && (
+              <TouchableOpacity
+                style={[styles.tab, tab === 'freight' && { backgroundColor: '#f59e0b' }]}
+                onPress={() => setTab('freight')}
+              >
+                <Ionicons name="construct" size={16} color={tab === 'freight' ? '#fff' : '#6b7280'} />
+                <Text style={[styles.tabText, tab === 'freight' && styles.tabTextActive]}>
+                  Fletes ({pendingFreights?.length ?? 0})
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
+
+          {tab === 'freight' && (
+            <View style={styles.listContainer}>
+              {(!pendingFreights || pendingFreights.length === 0) && (
+                <Text style={styles.emptyText}>Sin solicitudes de flete disponibles</Text>
+              )}
+              {(pendingFreights || []).map((freight: any) => (
+                <View key={freight.id} style={styles.requestCard}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <Ionicons name="construct" size={16} color="#f59e0b" />
+                    <Text style={{ fontSize: 12, fontWeight: '600', color: '#f59e0b' }}>
+                      {freight.serviceType === 'FLETE' ? 'Flete' : 'Maquinaria'}
+                    </Text>
+                  </View>
+                  <Text style={styles.requestDest}>{freight.cargoDescription}</Text>
+                  <Text style={styles.requestOrigin} numberOfLines={2}>
+                    {freight.pickupAddress}
+                    {freight.serviceType === 'FLETE' ? ` → ${freight.dropoffAddress}` : ''}
+                  </Text>
+                  {freight.estimatedWeightTons && (
+                    <Text style={{ fontSize: 12, color: '#9ca3af' }}>⚖️ {freight.estimatedWeightTons} ton</Text>
+                  )}
+                  {freight.estimatedHours && (
+                    <Text style={{ fontSize: 12, color: '#9ca3af' }}>⏱ {freight.estimatedHours}h estimadas</Text>
+                  )}
+                  {freight.requiresRefrigeration && (
+                    <Text style={{ fontSize: 12, color: '#3b82f6' }}>🧊 Requiere refrigeración</Text>
+                  )}
+                  <View style={[styles.requestFooter, { marginTop: 10 }]}>
+                    <Text style={styles.requestPrice}>${freight.estimatedPrice?.toLocaleString('es-AR')}</Text>
+                    <TouchableOpacity
+                      style={[styles.acceptBtn, { backgroundColor: '#f59e0b' }]}
+                      onPress={() => acceptFreight.mutate(freight.id)}
+                      disabled={acceptFreight.isPending}
+                    >
+                      <Text style={styles.acceptBtnText}>Aceptar</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
 
           {tab === 'trips' && (
             <View style={styles.listContainer}>

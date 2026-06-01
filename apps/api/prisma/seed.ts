@@ -1,4 +1,4 @@
-import { PrismaClient, UserRole, VehicleType } from '@prisma/client';
+import { PrismaClient, UserRole, VehicleType, TruckType, MachineryType } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -94,7 +94,77 @@ async function main() {
     },
   });
 
-  console.log('Seed completed:', { admin, passengerUser, driverCarUser, driverMotoUser });
+  // Conductor camión
+  const driverTruckUser = await prisma.user.upsert({
+    where: { email: 'roberto@example.com' },
+    update: {},
+    create: {
+      name: 'Roberto Díaz',
+      email: 'roberto@example.com',
+      phone: '+541144444444',
+      password,
+      role: UserRole.DRIVER,
+    },
+  });
+
+  await prisma.driver.upsert({
+    where: { userId: driverTruckUser.id },
+    update: {},
+    create: {
+      userId: driverTruckUser.id,
+      vehicleType: VehicleType.TRUCK,
+      vehiclePlate: 'CT789AB',
+      vehicleModel: 'Mercedes-Benz Atego 1726',
+      vehicleYear: 2021,
+      vehicleColor: 'Blanco',
+      licenseNumber: 'LIC-003',
+      truckType: TruckType.LARGE_TRUCK,
+      capacityTons: 8,
+      hasRefrigeration: false,
+      isAvailable: true,
+      isVerified: true,
+      currentLat: -34.5987,
+      currentLng: -58.4012,
+      rating: 4.7,
+      totalTrips: 80,
+    },
+  });
+
+  // Conductor maquinaria
+  const driverMachUser = await prisma.user.upsert({
+    where: { email: 'fabian@example.com' },
+    update: {},
+    create: {
+      name: 'Fabián Torres',
+      email: 'fabian@example.com',
+      phone: '+541155555555',
+      password,
+      role: UserRole.DRIVER,
+    },
+  });
+
+  await prisma.driver.upsert({
+    where: { userId: driverMachUser.id },
+    update: {},
+    create: {
+      userId: driverMachUser.id,
+      vehicleType: VehicleType.HEAVY_MACHINERY,
+      vehiclePlate: 'MQ321ZZ',
+      vehicleModel: 'Caterpillar 320 GC',
+      vehicleYear: 2020,
+      vehicleColor: 'Amarillo',
+      licenseNumber: 'LIC-004',
+      machineryType: MachineryType.EXCAVATOR,
+      isAvailable: true,
+      isVerified: true,
+      currentLat: -34.6200,
+      currentLng: -58.3900,
+      rating: 4.9,
+      totalTrips: 45,
+    },
+  });
+
+  console.log('Seed completed:', { admin, passengerUser, driverCarUser, driverMotoUser, driverTruckUser, driverMachUser });
 }
 
 main()

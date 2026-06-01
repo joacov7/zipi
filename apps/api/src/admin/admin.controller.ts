@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Patch, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { TripStatus, DeliveryStatus } from '@prisma/client';
+import { TripStatus, DeliveryStatus, FreightStatus } from '@prisma/client';
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -71,5 +71,15 @@ export class AdminController {
     @Query('status') status?: DeliveryStatus,
   ) {
     return this.adminService.listDeliveries(+page, +limit, status);
+  }
+
+  @Get('freights')
+  @ApiOperation({ summary: 'Listar fletes y solicitudes de maquinaria' })
+  listFreights(
+    @Query('page') page = 1,
+    @Query('limit') limit = 20,
+    @Query('status') status?: FreightStatus,
+  ) {
+    return this.adminService.listFreights(+page, +limit, status);
   }
 }

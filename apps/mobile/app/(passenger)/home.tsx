@@ -43,6 +43,20 @@ export default function PassengerHomeScreen() {
         </TouchableOpacity>
       </View>
 
+      <TouchableOpacity
+        style={styles.freightCard}
+        onPress={() => router.push('/(passenger)/request-freight')}
+      >
+        <View style={styles.freightCardLeft}>
+          <Ionicons name="construct" size={28} color="#f59e0b" />
+          <View style={{ marginLeft: 12 }}>
+            <Text style={styles.freightTitle}>Camiones y Maquinaria</Text>
+            <Text style={styles.freightSubtitle}>Fletes, excavadoras, grúas y más</Text>
+          </View>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+      </TouchableOpacity>
+
       {recentTrips.length > 0 && (
         <View>
           <Text style={styles.sectionTitle}>Viajes recientes</Text>
@@ -102,4 +116,12 @@ const styles = StyleSheet.create({
   tripDest: { fontSize: 14, fontWeight: '600', color: '#111827' },
   tripDate: { fontSize: 12, color: '#9ca3af', marginTop: 2 },
   tripPrice: { fontSize: 14, fontWeight: '700', color: '#111827' },
+  freightCard: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: '#fff', borderRadius: 20, marginHorizontal: 16, marginBottom: 16,
+    padding: 16, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
+  },
+  freightCardLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  freightTitle: { fontSize: 15, fontWeight: '700', color: '#111827' },
+  freightSubtitle: { fontSize: 12, color: '#9ca3af', marginTop: 2 },
 });

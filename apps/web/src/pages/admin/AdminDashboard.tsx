@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api';
-import { Users, Truck, Car, Package, DollarSign, Activity } from 'lucide-react';
+import { Users, Truck, Car, Package, DollarSign, Activity, Hammer } from 'lucide-react';
 
 interface StatCardProps {
   title: string;
@@ -84,10 +84,24 @@ export default function AdminDashboard() {
           color="bg-emerald-100"
         />
         <StatCard
-          title="Ingresos (envíos)"
-          value={`$${(stats?.revenue?.deliveries ?? 0).toLocaleString('es-AR')}`}
-          icon={<Activity size={24} className="text-orange-600" />}
+          title="Fletes / Maquinaria"
+          value={stats?.freights?.active ?? 0}
+          subtitle={`${stats?.freights?.total ?? 0} totales`}
+          icon={<Truck size={24} className="text-amber-600" />}
+          color="bg-amber-100"
+        />
+        <StatCard
+          title="Camioneros"
+          value={stats?.drivers?.trucks ?? 0}
+          subtitle={`${stats?.drivers?.machinery ?? 0} maquinistas`}
+          icon={<Hammer size={24} className="text-orange-600" />}
           color="bg-orange-100"
+        />
+        <StatCard
+          title="Ingresos (fletes)"
+          value={`$${(stats?.revenue?.freights ?? 0).toLocaleString('es-AR')}`}
+          icon={<Activity size={24} className="text-amber-600" />}
+          color="bg-amber-100"
         />
       </div>
 

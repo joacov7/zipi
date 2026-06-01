@@ -3,9 +3,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { getSocket } from '../../lib/socket';
 import { SocketEvent } from '@zipi/shared';
-import { Car, Package, ToggleLeft, ToggleRight, MapPin, Phone, Clock, DollarSign } from 'lucide-react';
+import { Car, Package, ToggleLeft, ToggleRight, MapPin, Clock, Truck, Hammer } from 'lucide-react';
+import { VehicleType } from '@zipi/shared';
 
-type Tab = 'trips' | 'deliveries';
+type Tab = 'trips' | 'deliveries' | 'freight';
 
 export default function DriverHome() {
   const [tab, setTab] = useState<Tab>('trips');
@@ -30,6 +31,13 @@ export default function DriverHome() {
     refetchInterval: 10000,
   });
 
+  const { data: pendingFreights } = useQuery({
+    queryKey: ['pending-freights'],
+    queryFn: () => api.get('/freight/pending').then((r) => r.data),
+    enabled: tab === 'freight',
+    refetchInterval: 10000,
+  });
+
   const toggleAvailability = useMutation({
     mutationFn: (isAvailable: boolean) => api.patch('/drivers/availability', { isAvailable }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['driver-profile'] }),
@@ -44,6 +52,13 @@ export default function DriverHome() {
     mutationFn: (deliveryId: string) => api.post(`/deliveries/${deliveryId}/accept`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['pending-deliveries'] }),
   });
+
+  const acceptFreight = useMutation({
+    mutationFn: (freightId: string) => api.post(`/freight/${freightId}/accept`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['pending-freights'] }),
+  });
+
+  const isTruckDriver = profile?.vehicleType === VehicleType.TRUCK || profile?.vehicleType === VehicleType.HEAVY_MACHINERY;
 
   useEffect(() => {
     const socket = getSocket();
@@ -130,26 +145,103 @@ export default function DriverHome() {
       {/* Tabs */}
       {profile.isAvailable && (
         <>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setTab('trips')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
-                tab === 'trips' ? 'bg-zipi-500 text-white' : 'bg-white border border-gray-200 text-gray-600'
-              }`}
-            >
-              <Car size={16} />
-              Remises ({pendingTrips?.length ?? 0})
-            </button>
-            <button
-              onClick={() => setTab('deliveries')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
-                tab === 'deliveries' ? 'bg-blue-500 text-white' : 'bg-white border border-gray-200 text-gray-600'
-              }`}
-            >
-              <Package size={16} />
-              Mandados ({pendingDeliveries?.length ?? 0})
-            </button>
+          <div className="flex gap-2 flex-wrap">
+            {!isTruckDriver && (
+              <button
+                onClick={() => setTab('trips')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+                  tab === 'trips' ? 'bg-zipi-500 text-white' : 'bg-white border border-gray-200 text-gray-600'
+                }`}
+              >
+                <Car size={16} />
+                Remises ({pendingTrips?.length ?? 0})
+              </button>
+            )}
+            {profile?.vehicleType === VehicleType.MOTORCYCLE && (
+              <button
+                onClick={() => setTab('deliveries')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+                  tab === 'deliveries' ? 'bg-blue-500 text-white' : 'bg-white border border-gray-200 text-gray-600'
+                }`}
+              >
+                <Package size={16} />
+                Mandados ({pendingDeliveries?.length ?? 0})
+              </button>
+            )}
+            {isTruckDriver && (
+              <button
+                onClick={() => setTab('freight')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+                  tab === 'freight' ? 'bg-amber-500 text-white' : 'bg-white border border-gray-200 text-gray-600'
+                }`}
+              >
+                <Truck size={16} />
+                Fletes / Maquinaria ({pendingFreights?.length ?? 0})
+              </button>
+            )}
           </div>
+
+          {tab === 'freight' && (
+            <div className="space-y-3">
+              {(pendingFreights || []).length === 0 && (
+                <div className="card text-center py-10">
+                  <p className="text-gray-500">No hay solicitudes de flete disponibles</p>
+                </div>
+              )}
+              {(pendingFreights || []).map((freight: any) => (
+                <div key={freight.id} className="card">
+                  <div className="flex items-center gap-2 mb-3">
+                    {freight.serviceType === 'FLETE' ? (
+                      <Truck size={18} className="text-amber-500" />
+                    ) : (
+                      <Hammer size={18} className="text-orange-500" />
+                    )}
+                    <span className={`badge text-xs ${freight.serviceType === 'FLETE' ? 'bg-amber-100 text-amber-700' : 'bg-orange-100 text-orange-700'}`}>
+                      {freight.serviceType === 'FLETE' ? 'Flete' : 'Maquinaria'}
+                    </span>
+                  </div>
+                  <p className="font-semibold text-gray-900 mb-1">{freight.cargoDescription}</p>
+                  <div className="text-sm text-gray-500 space-y-1 mb-3">
+                    <p className="flex items-center gap-1">
+                      <MapPin size={13} className="text-green-500" />
+                      {freight.pickupAddress}
+                    </p>
+                    {freight.serviceType === 'FLETE' && (
+                      <p className="flex items-center gap-1">
+                        <MapPin size={13} className="text-red-500" />
+                        {freight.dropoffAddress}
+                      </p>
+                    )}
+                    {freight.estimatedWeightTons && (
+                      <p>⚖️ {freight.estimatedWeightTons} toneladas</p>
+                    )}
+                    {freight.estimatedHours && (
+                      <p className="flex items-center gap-1">
+                        <Clock size={13} />
+                        {freight.estimatedHours}h estimadas
+                      </p>
+                    )}
+                    {freight.requiresRefrigeration && <p>🧊 Requiere refrigeración</p>}
+                    {freight.specialRequirements && (
+                      <p className="text-xs italic">"{freight.specialRequirements}"</p>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-amber-700">
+                      ${freight.estimatedPrice?.toLocaleString('es-AR')}
+                    </span>
+                    <button
+                      onClick={() => acceptFreight.mutate(freight.id)}
+                      disabled={acceptFreight.isPending}
+                      className="bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded-xl text-sm transition-colors disabled:opacity-50"
+                    >
+                      Aceptar
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {tab === 'trips' && (
             <div className="space-y-3">
