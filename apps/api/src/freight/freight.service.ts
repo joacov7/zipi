@@ -4,7 +4,7 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
-import { FreightStatus, FreightService, VehicleType } from '@prisma/client';
+import { FreightStatus, FreightService as FreightServiceEnum, VehicleType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { PRICING } from '@zipi/shared';
 import {
@@ -21,7 +21,7 @@ export class FreightService {
   async estimatePrice(dto: EstimateFreightDto) {
     const distance = this.haversine(dto.pickupLat, dto.pickupLng, dto.dropoffLat, dto.dropoffLng);
 
-    if (dto.serviceType === FreightService.FLETE) {
+    if (dto.serviceType === FreightServiceEnum.FLETE) {
       const type = (dto.truckType as keyof typeof PRICING.FLETE) || 'SMALL_TRUCK';
       const config = PRICING.FLETE[type] ?? PRICING.FLETE.SMALL_TRUCK;
       const breakdown = {
@@ -111,7 +111,7 @@ export class FreightService {
     if (!driver) throw new NotFoundException('Conductor no encontrado');
     if (!driver.isVerified) throw new ForbiddenException('Tu cuenta no está verificada');
     if (!driver.isAvailable) throw new ForbiddenException('No estás disponible');
-    if (![VehicleType.TRUCK, VehicleType.HEAVY_MACHINERY].includes(driver.vehicleType)) {
+    if (!([VehicleType.TRUCK, VehicleType.HEAVY_MACHINERY] as VehicleType[]).includes(driver.vehicleType)) {
       throw new ForbiddenException('Solo conductores de camión/maquinaria pueden aceptar fletes');
     }
 
@@ -123,13 +123,13 @@ export class FreightService {
 
     // Validate driver's vehicle matches service type
     if (
-      freight.serviceType === FreightService.MACHINERY &&
+      freight.serviceType === FreightServiceEnum.MACHINERY &&
       driver.vehicleType !== VehicleType.HEAVY_MACHINERY
     ) {
       throw new ForbiddenException('Esta solicitud es para maquinaria pesada');
     }
     if (
-      freight.serviceType === FreightService.FLETE &&
+      freight.serviceType === FreightServiceEnum.FLETE &&
       driver.vehicleType !== VehicleType.TRUCK
     ) {
       throw new ForbiddenException('Esta solicitud es para camiones de flete');
@@ -198,7 +198,7 @@ export class FreightService {
     return this.prisma.freightRequest.update({ where: { id: freightId }, data: updateData });
   }
 
-  async getPending(serviceType?: FreightService) {
+  async getPending(serviceType?: FreightServiceEnum) {
     return this.prisma.freightRequest.findMany({
       where: {
         status: FreightStatus.PENDING,
