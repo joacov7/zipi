@@ -24,6 +24,12 @@ export class TripsController {
     return this.tripsService.create(userId, dto);
   }
 
+  @Get('my-active')
+  @ApiOperation({ summary: 'Viaje activo del conductor (ACCEPTED o IN_PROGRESS)' })
+  getActiveTrip(@CurrentUser('sub') userId: string) {
+    return this.tripsService.getActiveTrip(userId);
+  }
+
   @Get('pending')
   @ApiOperation({ summary: 'Ver viajes pendientes (para conductores)' })
   getPending() {

@@ -17,10 +17,16 @@ export default function DriverHome() {
     queryFn: () => api.get('/drivers/me').then((r) => r.data),
   });
 
+  const { data: activeTrip } = useQuery({
+    queryKey: ['active-trip'],
+    queryFn: () => api.get('/trips/my-active').then((r) => r.data).catch(() => null),
+    refetchInterval: 8000,
+  });
+
   const { data: pendingTrips } = useQuery({
     queryKey: ['pending-trips'],
     queryFn: () => api.get('/trips/pending').then((r) => r.data),
-    enabled: tab === 'trips',
+    enabled: tab === 'trips' && !activeTrip,
     refetchInterval: 10000,
   });
 
@@ -41,6 +47,15 @@ export default function DriverHome() {
   const toggleAvailability = useMutation({
     mutationFn: (isAvailable: boolean) => api.patch('/drivers/availability', { isAvailable }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['driver-profile'] }),
+  });
+
+  const updateTripStatus = useMutation({
+    mutationFn: ({ tripId, status }: { tripId: string; status: string }) =>
+      api.patch(`/trips/${tripId}/status`, { status }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['active-trip'] });
+      queryClient.invalidateQueries({ queryKey: ['pending-trips'] });
+    },
   });
 
   const acceptTrip = useMutation({
@@ -103,6 +118,79 @@ export default function DriverHome() {
 
   return (
     <div className="space-y-6">
+
+      {/* Active trip banner */}
+      {activeTrip && (
+        <div className={`card border-l-4 space-y-3 ${
+          activeTrip.status === 'IN_PROGRESS' ? 'border-green-400' : 'border-blue-400'
+        }`}>
+          <div className="flex items-center justify-between">
+            <div>
+              <span className={`badge text-xs ${
+                activeTrip.status === 'IN_PROGRESS'
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-blue-100 text-blue-700'
+              }`}>
+                {activeTrip.status === 'IN_PROGRESS' ? '🚗 En viaje' : '✅ Viaje aceptado'}
+              </span>
+              <p className="font-bold text-gray-900 mt-1">Viaje activo</p>
+            </div>
+            <span className="font-bold text-lg text-zipi-600">
+              ${activeTrip.estimatedPrice?.toLocaleString('es-AR')}
+            </span>
+          </div>
+          <div className="space-y-2 text-sm">
+            <div className="flex items-start gap-2">
+              <MapPin size={14} className="text-green-500 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-xs text-gray-400">Origen</p>
+                <p className="text-gray-700">{activeTrip.originAddress}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <MapPin size={14} className="text-red-500 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-xs text-gray-400">Destino</p>
+                <p className="text-gray-700">{activeTrip.destAddress}</p>
+              </div>
+            </div>
+          </div>
+          {activeTrip.passenger && (
+            <div className="flex items-center gap-2 bg-gray-50 rounded-xl p-2">
+              <div className="w-8 h-8 bg-zipi-100 rounded-full flex items-center justify-center text-sm font-bold text-zipi-600">
+                {activeTrip.passenger.name?.charAt(0)}
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">{activeTrip.passenger.name}</p>
+              </div>
+              <a href={`tel:${activeTrip.passenger.phone}`} className="text-green-600 text-xs font-medium">
+                📞 Llamar
+              </a>
+            </div>
+          )}
+          <div className="flex gap-2">
+            {activeTrip.status === 'ACCEPTED' && (
+              <button
+                onClick={() => updateTripStatus.mutate({ tripId: activeTrip.id, status: 'IN_PROGRESS' })}
+                disabled={updateTripStatus.isPending}
+                className="btn-primary flex-1"
+              >
+                Iniciar viaje
+              </button>
+            )}
+            {activeTrip.status === 'IN_PROGRESS' && (
+              <button
+                onClick={() => updateTripStatus.mutate({ tripId: activeTrip.id, status: 'COMPLETED' })}
+                disabled={updateTripStatus.isPending}
+                className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl flex-1 transition-colors"
+              >
+                Completar viaje ✓
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Status card */}
       <div className="card">
         <div className="flex items-center justify-between">

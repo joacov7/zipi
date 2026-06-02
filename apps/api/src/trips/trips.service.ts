@@ -144,6 +144,20 @@ export class TripsService {
     return updatedTrip;
   }
 
+  async getActiveTrip(driverUserId: string) {
+    const driver = await this.prisma.driver.findUnique({ where: { userId: driverUserId } });
+    if (!driver) return null;
+    return this.prisma.trip.findFirst({
+      where: {
+        driverId: driver.id,
+        status: { in: [TripStatus.ACCEPTED, TripStatus.IN_PROGRESS] },
+      },
+      include: {
+        passenger: { select: { id: true, name: true, phone: true, avatarUrl: true } },
+      },
+    });
+  }
+
   async getPendingTrips(vehicleType?: string) {
     return this.prisma.trip.findMany({
       where: { status: TripStatus.PENDING },
