@@ -7,9 +7,13 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.use(helmet());
+  app.use(helmet({
+    strictTransportSecurity: false,
+    contentSecurityPolicy: false,
+    crossOriginOpenerPolicy: false,
+  }));
   app.enableCors({
-    origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:5173', 'http://localhost:3001'],
+    origin: process.env.CORS_ORIGINS?.split(',') ?? true,
     credentials: true,
   });
 
