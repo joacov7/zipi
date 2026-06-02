@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { MapPin, Navigation, Package } from 'lucide-react';
 import { DEFAULT_MAP_CENTER } from '@zipi/shared';
+import AddressInput from '../../components/ui/AddressInput';
 
 interface Estimate {
   estimatedPrice: number;
@@ -140,21 +141,20 @@ export default function RequestDelivery() {
       <div className="card space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Dirección de recogida</label>
-          <input
-            className="input"
+          <AddressInput
             placeholder="¿Desde dónde recogemos?"
             value={form.pickupAddress}
-            onChange={(e) => setForm({ ...form, pickupAddress: e.target.value })}
+            onChange={(v) => setForm((f) => ({ ...f, pickupAddress: v }))}
+            onSelect={(r) => setForm((f) => ({ ...f, pickupAddress: r.address, pickupLat: r.lat, pickupLng: r.lng }))}
           />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Dirección de entrega</label>
-          <input
-            className="input"
+          <AddressInput
             placeholder="¿Dónde entregamos?"
             value={form.dropoffAddress}
-            onChange={(e) => setForm({ ...form, dropoffAddress: e.target.value })}
-            required
+            onChange={(v) => setForm((f) => ({ ...f, dropoffAddress: v }))}
+            onSelect={(r) => setForm((f) => ({ ...f, dropoffAddress: r.address, dropoffLat: r.lat, dropoffLng: r.lng }))}
           />
         </div>
         <div>

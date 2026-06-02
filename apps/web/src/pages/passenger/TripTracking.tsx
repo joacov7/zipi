@@ -1,10 +1,12 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { getSocket } from '../../lib/socket';
 import { SocketEvent } from '@zipi/shared';
 import { Phone, Star, MapPin, Car, Clock } from 'lucide-react';
+
+const TripMap = lazy(() => import('../../components/map/TripMap'));
 
 const STATUS_LABELS: Record<string, string> = {
   PENDING: 'Buscando conductor...',
@@ -82,6 +84,24 @@ export default function TripTracking() {
           {STATUS_LABELS[trip.status] || trip.status}
         </span>
       </div>
+
+      {trip.originLat && trip.destLat && (
+        <Suspense fallback={<div className="h-64 bg-gray-100 rounded-xl animate-pulse" />}>
+          <TripMap
+            originLat={trip.originLat}
+            originLng={trip.originLng}
+            originAddress={trip.originAddress}
+            destLat={trip.destLat}
+            destLng={trip.destLng}
+            destAddress={trip.destAddress}
+            driverId={trip.driver?.id}
+            driverInitialLat={trip.driver?.currentLat}
+            driverInitialLng={trip.driver?.currentLng}
+            driverName={trip.driver?.user?.name}
+            tripStatus={trip.status}
+          />
+        </Suspense>
+      )}
 
       {trip.status === 'PENDING' && (
         <div className="card text-center py-8">

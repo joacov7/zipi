@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { MapPin, Navigation, Clock, DollarSign } from 'lucide-react';
 import { DEFAULT_MAP_CENTER } from '@zipi/shared';
+import AddressInput from '../../components/ui/AddressInput';
 
 interface Estimate {
   estimatedPrice: number;
@@ -157,11 +158,18 @@ export default function RequestTrip() {
             <Navigation size={14} className="inline mr-1 text-green-500" />
             Desde (tu ubicación)
           </label>
-          <input
-            className="input"
-            placeholder="Tu dirección actual"
+          <AddressInput
             value={form.originAddress}
-            onChange={(e) => setForm({ ...form, originAddress: e.target.value })}
+            onChange={(val) => setForm((f) => ({ ...f, originAddress: val }))}
+            onSelect={(r) =>
+              setForm((f) => ({
+                ...f,
+                originAddress: r.address,
+                originLat: r.lat,
+                originLng: r.lng,
+              }))
+            }
+            placeholder="Tu dirección actual"
           />
         </div>
         <div>
@@ -169,11 +177,18 @@ export default function RequestTrip() {
             <MapPin size={14} className="inline mr-1 text-red-500" />
             Hasta (destino)
           </label>
-          <input
-            className="input"
-            placeholder="¿A dónde vas?"
+          <AddressInput
             value={form.destAddress}
-            onChange={(e) => setForm({ ...form, destAddress: e.target.value })}
+            onChange={(val) => setForm((f) => ({ ...f, destAddress: val }))}
+            onSelect={(r) =>
+              setForm((f) => ({
+                ...f,
+                destAddress: r.address,
+                destLat: r.lat,
+                destLng: r.lng,
+              }))
+            }
+            placeholder="¿A dónde vas?"
           />
         </div>
       </div>
