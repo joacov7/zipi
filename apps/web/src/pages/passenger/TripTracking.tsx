@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { getSocket } from '../../lib/socket';
 import { SocketEvent } from '@zipi/shared';
 import { Phone, Star, MapPin, Car, Clock } from 'lucide-react';
@@ -26,6 +26,8 @@ export default function TripTracking() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [selectedRating, setSelectedRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
 
   const { data: trip, isLoading } = useQuery({
     queryKey: ['trip', id],
@@ -36,6 +38,11 @@ export default function TripTracking() {
   const cancelMutation = useMutation({
     mutationFn: () =>
       api.patch(`/trips/${id}/status`, { status: 'CANCELLED', cancelReason: 'Cancelado por pasajero' }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trip', id] }),
+  });
+
+  const rateMutation = useMutation({
+    mutationFn: (rating: number) => api.post(`/trips/${id}/rate`, { rating }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trip', id] }),
   });
 
@@ -158,9 +165,60 @@ export default function TripTracking() {
       )}
 
       {trip.status === 'COMPLETED' && (
-        <button onClick={() => navigate('/home')} className="btn-primary w-full">
-          Volver al inicio
-        </button>
+        <div className="card space-y-4">
+          <div className="text-center">
+            <p className="text-3xl mb-2">🎉</p>
+            <p className="font-bold text-gray-900 text-lg">¡Llegaste!</p>
+            <p className="text-sm text-gray-500 mt-1">
+              Precio final: <span className="font-bold text-zipi-600">${(trip.finalPrice ?? trip.estimatedPrice)?.toLocaleString('es-AR')}</span>
+            </p>
+          </div>
+
+          {!trip.passengerRating ? (
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-gray-700 text-center">¿Cómo fue el viaje?</p>
+              <div className="flex justify-center gap-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    onClick={() => setSelectedRating(star)}
+                    onMouseEnter={() => setHoverRating(star)}
+                    onMouseLeave={() => setHoverRating(0)}
+                    className="p-1 transition-transform hover:scale-110"
+                  >
+                    <Star
+                      size={36}
+                      className={`transition-colors ${
+                        star <= (hoverRating || selectedRating)
+                          ? 'text-amber-400 fill-amber-400'
+                          : 'text-gray-300'
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
+              {selectedRating > 0 && (
+                <button
+                  onClick={() => rateMutation.mutate(selectedRating)}
+                  disabled={rateMutation.isPending}
+                  className="btn-primary w-full"
+                >
+                  {rateMutation.isPending ? 'Enviando...' : `Calificar con ${selectedRating} ⭐`}
+                </button>
+              )}
+              <button onClick={() => navigate('/home')} className="btn-secondary w-full text-sm">
+                Saltar y volver al inicio
+              </button>
+            </div>
+          ) : (
+            <div className="text-center space-y-3">
+              <p className="text-sm text-gray-500">Ya calificaste este viaje con {trip.passengerRating} ⭐</p>
+              <button onClick={() => navigate('/home')} className="btn-primary w-full">
+                Volver al inicio
+              </button>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
