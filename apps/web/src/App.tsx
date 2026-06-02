@@ -19,6 +19,15 @@ import DriverHome from './pages/driver/DriverHome';
 import DriverProfile from './pages/driver/DriverProfile';
 import DriverHistory from './pages/driver/DriverHistory';
 
+// Services
+import ServicesPage from './pages/services/ServicesPage';
+import RequestServicePage from './pages/services/RequestServicePage';
+import MyRequestsPage from './pages/services/MyRequestsPage';
+
+// Contractor
+import ContractorDashboard from './pages/contractor/ContractorDashboard';
+import ContractorProfile from './pages/contractor/ContractorProfile';
+
 // Admin
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
@@ -42,6 +51,7 @@ function RoleRedirect() {
   if (!user) return <Navigate to="/login" />;
   if (user.role === UserRole.ADMIN) return <Navigate to="/admin" />;
   if (user.role === UserRole.DRIVER) return <Navigate to="/driver" />;
+  if (user.role === UserRole.CONTRACTOR) return <Navigate to="/contractor" />;
   return <Navigate to="/home" />;
 }
 
@@ -111,6 +121,58 @@ export default function App() {
             <Layout>
               <PassengerHistory />
             </Layout>
+          </PrivateRoute>
+        }
+      />
+
+      {/* Services (passenger + contractor) */}
+      <Route
+        path="/services"
+        element={
+          <PrivateRoute roles={[UserRole.PASSENGER, UserRole.CONTRACTOR]}>
+            <Layout><ServicesPage /></Layout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/services/request"
+        element={
+          <PrivateRoute roles={[UserRole.PASSENGER]}>
+            <Layout><RequestServicePage /></Layout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/services/my-requests"
+        element={
+          <PrivateRoute roles={[UserRole.PASSENGER]}>
+            <Layout><MyRequestsPage /></Layout>
+          </PrivateRoute>
+        }
+      />
+
+      {/* Contractor */}
+      <Route
+        path="/contractor"
+        element={
+          <PrivateRoute roles={[UserRole.CONTRACTOR]}>
+            <Layout><ContractorDashboard /></Layout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/contractor/profile"
+        element={
+          <PrivateRoute roles={[UserRole.CONTRACTOR]}>
+            <Layout><ContractorProfile /></Layout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/contractor/jobs"
+        element={
+          <PrivateRoute roles={[UserRole.CONTRACTOR]}>
+            <Layout><ContractorDashboard /></Layout>
           </PrivateRoute>
         }
       />

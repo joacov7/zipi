@@ -14,6 +14,8 @@ import {
   Truck,
   MapPin,
   Hammer,
+  Wrench,
+  HardHat,
 } from 'lucide-react';
 
 interface NavItem {
@@ -38,11 +40,19 @@ function getNavItems(role: string): NavItem[] {
       { to: '/driver/profile', label: 'Perfil', icon: <User size={20} /> },
     ];
   }
+  if (role === UserRole.CONTRACTOR) {
+    return [
+      { to: '/contractor', label: 'Inicio', icon: <Home size={20} /> },
+      { to: '/contractor/jobs', label: 'Mis trabajos', icon: <HardHat size={20} /> },
+      { to: '/contractor/profile', label: 'Perfil', icon: <User size={20} /> },
+    ];
+  }
   return [
     { to: '/home', label: 'Inicio', icon: <Home size={20} /> },
     { to: '/request-trip', label: 'Pedir Remis', icon: <Car size={20} /> },
     { to: '/request-delivery', label: 'Motomandado', icon: <Package size={20} /> },
     { to: '/request-freight', label: 'Fletes / Maquinaria', icon: <Truck size={20} /> },
+    { to: '/services', label: 'Servicios', icon: <Wrench size={20} /> },
     { to: '/history', label: 'Historial', icon: <History size={20} /> },
   ];
 }
@@ -75,7 +85,9 @@ export default function Layout({ children }: { children: ReactNode }) {
                   ? 'Administrador'
                   : user?.role === UserRole.DRIVER
                     ? 'Conductor'
-                    : 'Pasajero'}
+                    : user?.role === UserRole.CONTRACTOR
+                      ? 'Contratista'
+                      : 'Pasajero'}
               </p>
             </div>
           </div>

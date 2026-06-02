@@ -2,6 +2,7 @@ export enum UserRole {
   PASSENGER = 'PASSENGER',
   DRIVER = 'DRIVER',
   ADMIN = 'ADMIN',
+  CONTRACTOR = 'CONTRACTOR',
 }
 
 export enum VehicleType {
@@ -62,6 +63,38 @@ export enum ServiceType {
   MOTO = 'MOTO',
   FLETE = 'FLETE',
   MACHINERY = 'MACHINERY',
+}
+
+export enum ServiceUrgency {
+  URGENT   = 'URGENT',
+  NORMAL   = 'NORMAL',
+  FLEXIBLE = 'FLEXIBLE',
+}
+
+export enum ServiceRequestStatus {
+  OPEN        = 'OPEN',
+  QUOTED      = 'QUOTED',
+  ACCEPTED    = 'ACCEPTED',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED   = 'COMPLETED',
+  CANCELLED   = 'CANCELLED',
+  EXPIRED     = 'EXPIRED',
+}
+
+export enum QuoteStatus {
+  PENDING   = 'PENDING',
+  ACCEPTED  = 'ACCEPTED',
+  REJECTED  = 'REJECTED',
+  WITHDRAWN = 'WITHDRAWN',
+}
+
+export enum JobStatus {
+  PENDING_PAYMENT = 'PENDING_PAYMENT',
+  PAID            = 'PAID',
+  IN_PROGRESS     = 'IN_PROGRESS',
+  COMPLETED       = 'COMPLETED',
+  CANCELLED       = 'CANCELLED',
+  DISPUTED        = 'DISPUTED',
 }
 
 export enum SocketEvent {

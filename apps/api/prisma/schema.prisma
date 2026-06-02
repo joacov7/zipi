@@ -25,6 +25,10 @@ model User {
   freightAsRequester  FreightRequest[] @relation("RequesterFreight")
   refreshTokens       RefreshToken[]
 
+  contractorProfile   ContractorProfile?
+  serviceRequests     ServiceRequest[]    @relation("ClientRequests")
+  serviceJobsAsClient ServiceJob[]        @relation("ClientJobs")
+
   @@map("users")
 }
 
@@ -160,6 +164,7 @@ enum UserRole {
   PASSENGER
   DRIVER
   ADMIN
+  CONTRACTOR
 }
 
 enum VehicleType {
@@ -213,4 +218,144 @@ enum DeliveryStatus {
   IN_TRANSIT
   DELIVERED
   CANCELLED
+}
+
+model ServiceCategory {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  icon        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  requests    ServiceRequest[]
+  contractors ContractorService[]
+
+  @@map("service_categories")
+}
+
+model ContractorProfile {
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio        String?
+  cuit       String?
+  isVerified Boolean  @default(false)
+  isAvailable Boolean @default(false)
+  rating     Float    @default(5.0)
+  totalJobs  Int      @default(0)
+  coverageKm Int      @default(20)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  services   ContractorService[]
+  quotes     ServiceQuote[]
+  jobs       ServiceJob[]
+
+  @@map("contractor_profiles")
+}
+
+model ContractorService {
+  contractorId String
+  categoryId   String
+  contractor   ContractorProfile @relation(fields: [contractorId], references: [id], onDelete: Cascade)
+  category     ServiceCategory   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([contractorId, categoryId])
+  @@map("contractor_services")
+}
+
+model ServiceRequest {
+  id          String               @id @default(uuid())
+  clientId    String
+  client      User                 @relation("ClientRequests", fields: [clientId], references: [id])
+  categoryId  String
+  category    ServiceCategory      @relation(fields: [categoryId], references: [id])
+  title       String
+  description String
+  address     String
+  lat         Float?
+  lng         Float?
+  urgency     ServiceUrgency       @default(NORMAL)
+  status      ServiceRequestStatus @default(OPEN)
+  expiresAt   DateTime?
+  createdAt   DateTime             @default(now())
+
+  quotes      ServiceQuote[]
+  job         ServiceJob?
+
+  @@map("service_requests")
+}
+
+model ServiceQuote {
+  id             String        @id @default(uuid())
+  requestId      String
+  request        ServiceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  contractorId   String
+  contractor     ContractorProfile @relation(fields: [contractorId], references: [id])
+  price          Float
+  description    String
+  estimatedHours Int?
+  status         QuoteStatus   @default(PENDING)
+  createdAt      DateTime      @default(now())
+
+  job            ServiceJob?
+
+  @@map("service_quotes")
+}
+
+model ServiceJob {
+  id              String    @id @default(uuid())
+  requestId       String    @unique
+  request         ServiceRequest    @relation(fields: [requestId], references: [id])
+  quoteId         String    @unique
+  quote           ServiceQuote      @relation(fields: [quoteId], references: [id])
+  contractorId    String
+  contractor      ContractorProfile @relation(fields: [contractorId], references: [id])
+  clientId        String
+  client          User              @relation("ClientJobs", fields: [clientId], references: [id])
+  status          JobStatus @default(PENDING_PAYMENT)
+  escrowAmount    Float
+  platformFee     Float
+  finalAmount     Float
+  clientRating    Int?
+  contractorRating Int?
+  cancelReason    String?
+  completedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("service_jobs")
+}
+
+enum ServiceUrgency {
+  URGENT
+  NORMAL
+  FLEXIBLE
+}
+
+enum ServiceRequestStatus {
+  OPEN
+  QUOTED
+  ACCEPTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  EXPIRED
+}
+
+enum QuoteStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+enum JobStatus {
+  PENDING_PAYMENT
+  PAID
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  DISPUTED
 }

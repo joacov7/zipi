@@ -164,7 +164,64 @@ async function main() {
     },
   });
 
-  console.log('Seed completed:', { admin, passengerUser, driverCarUser, driverMotoUser, driverTruckUser, driverMachUser });
+  // Service categories
+  const serviceCategories = [
+    { name: 'Electricista',   icon: '⚡', description: 'Instalaciones y reparaciones eléctricas' },
+    { name: 'Plomero',        icon: '🔧', description: 'Cañerías, desagotes y sanitarios' },
+    { name: 'Gasista',        icon: '🔥', description: 'Instalaciones y reparaciones de gas' },
+    { name: 'Pintor',         icon: '🎨', description: 'Pintura interior y exterior' },
+    { name: 'Carpintero',     icon: '🪚', description: 'Muebles, puertas y reparaciones' },
+    { name: 'Cerrajero',      icon: '🔑', description: 'Apertura, cerraduras e instalaciones' },
+    { name: 'Albañil',        icon: '🧱', description: 'Reformas, reparaciones y construcción' },
+    { name: 'Limpieza',       icon: '🧹', description: 'Limpieza del hogar y mudanzas' },
+  ];
+
+  for (const cat of serviceCategories) {
+    await prisma.serviceCategory.upsert({
+      where: { name: cat.name } as any,
+      update: {},
+      create: cat,
+    });
+  }
+
+  // Contractor user
+  const contractorUser = await prisma.user.upsert({
+    where: { email: 'electricista@example.com' },
+    update: {},
+    create: {
+      name: 'Pedro Gómez',
+      email: 'electricista@example.com',
+      phone: '+541166666666',
+      password,
+      role: UserRole.CONTRACTOR,
+    },
+  });
+
+  const electricCategory = await prisma.serviceCategory.findFirst({ where: { name: 'Electricista' } });
+  if (electricCategory) {
+    const contractorProfile = await prisma.contractorProfile.upsert({
+      where: { userId: contractorUser.id },
+      update: {},
+      create: {
+        userId: contractorUser.id,
+        bio: 'Electricista matriculado con 10 años de experiencia. Instalaciones domiciliarias, tableros y emergencias.',
+        cuit: '20-30000000-0',
+        isVerified: true,
+        isAvailable: true,
+        rating: 4.9,
+        totalJobs: 87,
+        coverageKm: 30,
+      },
+    });
+
+    await prisma.contractorService.upsert({
+      where: { contractorId_categoryId: { contractorId: contractorProfile.id, categoryId: electricCategory.id } },
+      update: {},
+      create: { contractorId: contractorProfile.id, categoryId: electricCategory.id },
+    });
+  }
+
+  console.log('Seed completed: users, drivers, service categories + contractor');
 }
 
 main()
