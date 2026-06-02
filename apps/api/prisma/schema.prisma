@@ -13,11 +13,15 @@ model User {
   email     String   @unique
   phone     String   @unique
   password  String
-  role      UserRole @default(PASSENGER)
-  avatarUrl String?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  role          UserRole @default(PASSENGER)
+  avatarUrl     String?
+  isActive      Boolean  @default(true)
+  referralCode  String?  @unique
+  referredBy    String?
+  walletBalance Float    @default(0)
+  cuit          String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   driver              Driver?
   tripsAsPassenger    Trip[]          @relation("PassengerTrips")
@@ -25,12 +29,27 @@ model User {
   freightAsRequester  FreightRequest[] @relation("RequesterFreight")
   refreshTokens       RefreshToken[]
   pushTokens          PushToken[]
+  walletTransactions  WalletTransaction[]
 
   contractorProfile   ContractorProfile?
   serviceRequests     ServiceRequest[]    @relation("ClientRequests")
   serviceJobsAsClient ServiceJob[]        @relation("ClientJobs")
 
   @@map("users")
+}
+
+model WalletTransaction {
+  id          String                @id @default(uuid())
+  userId      String
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount      Float
+  type        WalletTransactionType
+  description String
+  tripId      String?
+  createdAt   DateTime              @default(now())
+
+  @@index([userId])
+  @@map("wallet_transactions")
 }
 
 model RefreshToken {
@@ -419,4 +438,11 @@ model DiscountCode {
   createdAt       DateTime  @default(now())
 
   @@map("discount_codes")
+}
+
+enum WalletTransactionType {
+  CREDIT
+  DEBIT
+  REFERRAL_BONUS
+  ADMIN_ADJUSTMENT
 }

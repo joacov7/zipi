@@ -1,8 +1,9 @@
-import { Controller, Post, Get, Patch, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Body, Param, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { TripsService } from './trips.service';
 import { ChatService } from '../chat/chat.service';
-import { DiscountsService } from '../discounts/discounts.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateTripDto, UpdateTripStatusDto, RateTripDto, EstimatePriceDto } from './dto/trip.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -15,7 +16,8 @@ export class TripsController {
   constructor(
     private tripsService: TripsService,
     private chatService: ChatService,
-    private discountsService: DiscountsService,
+    private notifications: NotificationsService,
+    private prisma: PrismaService,
   ) {}
 
   @Post('estimate')
@@ -28,6 +30,12 @@ export class TripsController {
   @ApiOperation({ summary: 'Solicitar un viaje' })
   create(@CurrentUser('sub') userId: string, @Body() dto: CreateTripDto) {
     return this.tripsService.create(userId, dto);
+  }
+
+  @Get('surge')
+  @ApiOperation({ summary: 'Multiplicador de tarifa dinámica actual' })
+  getSurge() {
+    return this.tripsService.getSurgeMultiplier();
   }
 
   @Get('my-active')
@@ -76,9 +84,67 @@ export class TripsController {
     return this.chatService.getMessages(id);
   }
 
-  @Get('surge')
-  @ApiOperation({ summary: 'Multiplicador de tarifa dinámica actual' })
-  getSurge() {
-    return this.tripsService.getSurgeMultiplier();
+  @Post(':id/sos')
+  @ApiOperation({ summary: 'Activar SOS durante el viaje' })
+  async sos(@CurrentUser('sub') userId: string, @Param('id') id: string) {
+    const trip = await this.tripsService.findById(id);
+
+    // Notify all admins
+    const admins = await this.prisma.user.findMany({ where: { role: 'ADMIN' } });
+    const user = await this.prisma.user.findUnique({ where: { id: userId }, select: { name: true } });
+
+    await this.notifications.sendToUsers(
+      admins.map((a) => a.id),
+      '🆘 ALERTA SOS',
+      `${user?.name} activó SOS en el viaje ${id.slice(0, 8)}`,
+      { tripId: id, type: 'sos' },
+    );
+
+    return {
+      message: 'SOS activado. Alerta enviada.',
+      trip: { id: trip.id, originAddress: trip.originAddress, destAddress: trip.destAddress },
+      emergencyContacts: [
+        { label: 'Policía', phone: '911' },
+        { label: 'Bomberos', phone: '100' },
+        { label: 'Ambulancia', phone: '107' },
+        { label: 'Emergencias', phone: '911' },
+      ],
+    };
+  }
+
+  @Get(':id/invoice')
+  @ApiOperation({ summary: 'Datos para factura/recibo del viaje' })
+  async getInvoice(@CurrentUser('sub') userId: string, @Param('id') id: string) {
+    const trip = await this.tripsService.findById(id);
+    const passenger = await this.prisma.user.findUnique({
+      where: { id: trip.passenger.id },
+      select: { name: true, email: true, cuit: true },
+    });
+
+    const invoiceNumber = `ZIPI-${trip.createdAt.getFullYear()}-${String(trip.id).slice(-6).toUpperCase()}`;
+    const finalAmount = trip.finalPrice ?? trip.estimatedPrice;
+    const iva = Math.round(finalAmount * 0.21);
+
+    return {
+      invoiceNumber,
+      date: trip.createdAt,
+      provider: { name: 'Zipi S.R.L.', cuit: '30-00000000-0', address: 'Buenos Aires, Argentina' },
+      client: { name: passenger?.name, email: passenger?.email, cuit: passenger?.cuit },
+      trip: {
+        from: trip.originAddress,
+        to: trip.destAddress,
+        date: trip.createdAt,
+        distanceKm: trip.distanceKm,
+        driverName: trip.driver?.user?.name,
+      },
+      pricing: {
+        subtotal: Math.round(finalAmount / 1.21),
+        iva,
+        total: finalAmount,
+        discountCode: trip.discountCode,
+        discountAmount: trip.discountAmount,
+        surgeMultiplier: trip.surgeMultiplier,
+      },
+    };
   }
 }

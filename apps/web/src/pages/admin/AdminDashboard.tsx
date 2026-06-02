@@ -27,6 +27,48 @@ function StatCard({ title, value, subtitle, icon, color }: StatCardProps) {
   );
 }
 
+function MiniBarChart({ data }: { data: { date: string; trips: number; revenue: number }[] }) {
+  const maxTrips = Math.max(...data.map((d) => d.trips), 1);
+  const maxRev = Math.max(...data.map((d) => d.revenue), 1);
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Viajes últimos 7 días</p>
+        <div className="flex items-end gap-1 h-20">
+          {data.map((d) => (
+            <div key={d.date} className="flex-1 flex flex-col items-center gap-1">
+              <span className="text-xs text-gray-500">{d.trips}</span>
+              <div
+                className="w-full bg-zipi-400 rounded-t-sm transition-all"
+                style={{ height: `${Math.max((d.trips / maxTrips) * 56, d.trips > 0 ? 4 : 0)}px` }}
+              />
+              <span className="text-xs text-gray-400 truncate w-full text-center">{d.date}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Ingresos últimos 7 días (ARS)</p>
+        <div className="flex items-end gap-1 h-20">
+          {data.map((d) => (
+            <div key={d.date} className="flex-1 flex flex-col items-center gap-1">
+              <span className="text-xs text-gray-500">
+                {d.revenue > 0 ? `$${Math.round(d.revenue / 1000)}k` : '0'}
+              </span>
+              <div
+                className="w-full bg-emerald-400 rounded-t-sm transition-all"
+                style={{ height: `${Math.max((d.revenue / maxRev) * 56, d.revenue > 0 ? 4 : 0)}px` }}
+              />
+              <span className="text-xs text-gray-400 truncate w-full text-center">{d.date}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
   const { data: stats, isLoading } = useQuery({
     queryKey: ['admin-stats'],
@@ -106,12 +148,19 @@ export default function AdminDashboard() {
       </div>
 
       <div className="card">
-        <h2 className="font-bold text-gray-900 mb-2">Ingresos totales</h2>
+        <h2 className="font-bold text-gray-900 mb-1">Ingresos totales</h2>
         <p className="text-4xl font-bold text-zipi-600">
           ${(stats?.revenue?.total ?? 0).toLocaleString('es-AR')}
         </p>
         <p className="text-sm text-gray-500 mt-1">Suma de viajes + envíos completados</p>
       </div>
+
+      {stats?.chart && stats.chart.length > 0 && (
+        <div className="card">
+          <h2 className="font-bold text-gray-900 mb-4">Actividad reciente</h2>
+          <MiniBarChart data={stats.chart} />
+        </div>
+      )}
     </div>
   );
 }

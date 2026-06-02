@@ -69,7 +69,34 @@ export class AdminService {
           (deliveryRevenue._sum.finalPrice ?? 0) +
           (freightRevenue._sum.finalPrice ?? 0),
       },
+      chart: await this.getLast7DaysChart(),
     };
+  }
+
+  private async getLast7DaysChart() {
+    const days: { date: string; trips: number; revenue: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const start = new Date();
+      start.setDate(start.getDate() - i);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(start);
+      end.setHours(23, 59, 59, 999);
+
+      const [count, rev] = await Promise.all([
+        this.prisma.trip.count({ where: { createdAt: { gte: start, lte: end } } }),
+        this.prisma.trip.aggregate({
+          _sum: { finalPrice: true },
+          where: { status: TripStatus.COMPLETED, createdAt: { gte: start, lte: end } },
+        }),
+      ]);
+
+      days.push({
+        date: start.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' }),
+        trips: count,
+        revenue: rev._sum.finalPrice ?? 0,
+      });
+    }
+    return days;
   }
 
   async listUsers(page = 1, limit = 20, search?: string) {

@@ -28,6 +28,11 @@ import MyRequestsPage from './pages/services/MyRequestsPage';
 import ContractorDashboard from './pages/contractor/ContractorDashboard';
 import ContractorProfile from './pages/contractor/ContractorProfile';
 
+// Passenger extra
+import WalletPage from './pages/passenger/WalletPage';
+import ReferralPage from './pages/passenger/ReferralPage';
+import InvoicePage from './pages/passenger/InvoicePage';
+
 // Admin
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
@@ -126,6 +131,23 @@ export default function App() {
           </PrivateRoute>
         }
       />
+      <Route
+        path="/wallet"
+        element={
+          <PrivateRoute roles={[UserRole.PASSENGER]}>
+            <Layout><WalletPage /></Layout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/referral"
+        element={
+          <PrivateRoute roles={[UserRole.PASSENGER]}>
+            <Layout><ReferralPage /></Layout>
+          </PrivateRoute>
+        }
+      />
+      <Route path="/invoice/:id" element={<PrivateRoute roles={[UserRole.PASSENGER]}><InvoicePage /></PrivateRoute>} />
 
       {/* Services (passenger + contractor) */}
       <Route

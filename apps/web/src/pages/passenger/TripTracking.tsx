@@ -4,9 +4,10 @@ import { api } from '../../lib/api';
 import { useEffect, useState, lazy, Suspense } from 'react';
 import { getSocket } from '../../lib/socket';
 import { SocketEvent } from '@zipi/shared';
-import { Phone, Star, MapPin, Car, Clock, AlertTriangle } from 'lucide-react';
+import { Phone, Star, MapPin, Car, Clock, AlertTriangle, ShieldAlert, Receipt } from 'lucide-react';
 import TripChat from '../../components/chat/TripChat';
 import { CANCELLATION_FEE_AFTER_ACCEPT } from '@zipi/shared';
+import { useState } from 'react';
 
 const TripMap = lazy(() => import('../../components/map/TripMap'));
 
@@ -32,6 +33,8 @@ export default function TripTracking() {
   const queryClient = useQueryClient();
   const [selectedRating, setSelectedRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
+  const [sosLoading, setSosLoading] = useState(false);
+  const [sosContacts, setSosContacts] = useState<any[] | null>(null);
 
   const { data: trip, isLoading } = useQuery({
     queryKey: ['trip', id],
@@ -176,6 +179,61 @@ export default function TripTracking() {
 
       {['ACCEPTED', 'IN_PROGRESS'].includes(trip.status) && trip.driver && (
         <TripChat tripId={trip.id} />
+      )}
+
+      {/* SOS */}
+      {['ACCEPTED', 'IN_PROGRESS'].includes(trip.status) && (
+        <div className="space-y-2">
+          {sosContacts ? (
+            <div className="card border-red-200 bg-red-50 space-y-3">
+              <div className="flex items-center gap-2">
+                <ShieldAlert size={18} className="text-red-600" />
+                <p className="font-semibold text-red-800">SOS activado — Contactos de emergencia</p>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {sosContacts.map((c: any) => (
+                  <a key={c.phone} href={`tel:${c.phone}`}
+                    className="bg-white border border-red-200 rounded-xl py-2 px-3 text-center hover:bg-red-50">
+                    <p className="font-bold text-red-700 text-lg">{c.phone}</p>
+                    <p className="text-xs text-red-500">{c.label}</p>
+                  </a>
+                ))}
+              </div>
+              <button onClick={() => setSosContacts(null)} className="text-xs text-red-400 hover:text-red-600">
+                Cerrar
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={async () => {
+                if (!confirm('¿Activar SOS? Se alertará a nuestro equipo de seguridad.')) return;
+                setSosLoading(true);
+                try {
+                  const { data } = await api.post(`/trips/${trip.id}/sos`);
+                  setSosContacts(data.emergencyContacts);
+                } finally {
+                  setSosLoading(false);
+                }
+              }}
+              disabled={sosLoading}
+              className="w-full py-3 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-colors"
+            >
+              <ShieldAlert size={18} />
+              {sosLoading ? 'Activando...' : '🆘 SOS — Emergencia'}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Invoice for completed trips */}
+      {trip.status === 'COMPLETED' && (
+        <button
+          onClick={() => window.open(`/invoice/${trip.id}`, '_blank')}
+          className="w-full flex items-center justify-center gap-2 py-2 text-sm text-gray-600 hover:text-zipi-600 border border-gray-200 rounded-xl hover:border-zipi-300 transition-colors"
+        >
+          <Receipt size={16} />
+          Ver factura / recibo
+        </button>
       )}
 
       {['PENDING', 'ACCEPTED'].includes(trip.status) && (

@@ -18,6 +18,8 @@ import {
   Wrench,
   HardHat,
   Tag,
+  Wallet,
+  Gift,
 } from 'lucide-react';
 
 interface NavItem {
@@ -58,6 +60,8 @@ function getNavItems(role: string): NavItem[] {
     { to: '/request-freight', label: 'Fletes / Maquinaria', icon: <Truck size={20} /> },
     { to: '/services', label: 'Servicios', icon: <Wrench size={20} /> },
     { to: '/history', label: 'Historial', icon: <History size={20} /> },
+    { to: '/wallet', label: 'Billetera', icon: <Wallet size={20} /> },
+    { to: '/referral', label: 'Referir amigos', icon: <Gift size={20} /> },
   ];
 }
 
