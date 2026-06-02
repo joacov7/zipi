@@ -11,6 +11,7 @@ import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { SocketEvent } from '@zipi/shared';
+import { ChatService } from '../chat/chat.service';
 
 interface AuthSocket extends Socket {
   userId?: string;
@@ -32,6 +33,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private jwtService: JwtService,
     private config: ConfigService,
+    private chatService: ChatService,
   ) {}
 
   async handleConnection(client: AuthSocket) {
@@ -118,5 +120,30 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   notifyNewDelivery(data: any) {
     this.server.emit(SocketEvent.DELIVERY_REQUEST, data);
+  }
+
+  @SubscribeMessage('chat:join')
+  handleChatJoin(
+    @ConnectedSocket() client: AuthSocket,
+    @MessageBody() data: { tripId: string },
+  ) {
+    client.join(`trip:${data.tripId}:chat`);
+  }
+
+  @SubscribeMessage('chat:send')
+  async handleChatSend(
+    @ConnectedSocket() client: AuthSocket,
+    @MessageBody() data: { tripId: string; content: string; senderName: string },
+  ) {
+    if (!client.userId || !data.content?.trim()) return;
+
+    const message = await this.chatService.saveMessage(
+      data.tripId,
+      client.userId,
+      data.senderName,
+      data.content.trim(),
+    );
+
+    this.server.to(`trip:${data.tripId}:chat`).emit(SocketEvent.CHAT_MESSAGE, message);
   }
 }

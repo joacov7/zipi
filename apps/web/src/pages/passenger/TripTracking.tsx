@@ -5,6 +5,7 @@ import { useEffect, useState, lazy, Suspense } from 'react';
 import { getSocket } from '../../lib/socket';
 import { SocketEvent } from '@zipi/shared';
 import { Phone, Star, MapPin, Car, Clock } from 'lucide-react';
+import TripChat from '../../components/chat/TripChat';
 
 const TripMap = lazy(() => import('../../components/map/TripMap'));
 
@@ -171,6 +172,10 @@ export default function TripTracking() {
           ${(trip.finalPrice ?? trip.estimatedPrice)?.toLocaleString('es-AR')}
         </span>
       </div>
+
+      {['ACCEPTED', 'IN_PROGRESS'].includes(trip.status) && trip.driver && (
+        <TripChat tripId={trip.id} />
+      )}
 
       {['PENDING', 'ACCEPTED'].includes(trip.status) && (
         <button

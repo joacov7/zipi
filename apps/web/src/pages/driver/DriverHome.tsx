@@ -4,6 +4,7 @@ import { api } from '../../lib/api';
 import { getSocket } from '../../lib/socket';
 import { SocketEvent } from '@zipi/shared';
 import { Car, Package, ToggleLeft, ToggleRight, MapPin, Clock, Truck, Hammer } from 'lucide-react';
+import TripChat from '../../components/chat/TripChat';
 import { VehicleType } from '@zipi/shared';
 
 type Tab = 'trips' | 'deliveries' | 'freight';
@@ -168,6 +169,7 @@ export default function DriverHome() {
               </a>
             </div>
           )}
+          <TripChat tripId={activeTrip.id} />
           <div className="flex gap-2">
             {activeTrip.status === 'ACCEPTED' && (
               <button

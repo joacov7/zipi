@@ -127,4 +127,7 @@ export enum SocketEvent {
 
   // Location tracking
   LOCATION_UPDATE = 'location:update',
+
+  // Chat
+  CHAT_MESSAGE = 'chat:message',
 }
