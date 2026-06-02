@@ -2,6 +2,7 @@ import { Controller, Post, Get, Patch, Body, Param, Query, UseGuards } from '@ne
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { TripsService } from './trips.service';
 import { ChatService } from '../chat/chat.service';
+import { DiscountsService } from '../discounts/discounts.service';
 import { CreateTripDto, UpdateTripStatusDto, RateTripDto, EstimatePriceDto } from './dto/trip.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -14,6 +15,7 @@ export class TripsController {
   constructor(
     private tripsService: TripsService,
     private chatService: ChatService,
+    private discountsService: DiscountsService,
   ) {}
 
   @Post('estimate')
@@ -72,5 +74,11 @@ export class TripsController {
   @ApiOperation({ summary: 'Historial de chat del viaje' })
   getMessages(@Param('id') id: string) {
     return this.chatService.getMessages(id);
+  }
+
+  @Get('surge')
+  @ApiOperation({ summary: 'Multiplicador de tarifa dinámica actual' })
+  getSurge() {
+    return this.tripsService.getSurgeMultiplier();
   }
 }

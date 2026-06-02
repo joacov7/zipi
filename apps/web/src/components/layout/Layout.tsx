@@ -17,6 +17,7 @@ import {
   Hammer,
   Wrench,
   HardHat,
+  Tag,
 } from 'lucide-react';
 
 interface NavItem {
@@ -32,6 +33,8 @@ function getNavItems(role: string): NavItem[] {
       { to: '/admin/users', label: 'Usuarios', icon: <Users size={20} /> },
       { to: '/admin/drivers', label: 'Conductores', icon: <Truck size={20} /> },
       { to: '/admin/trips', label: 'Viajes', icon: <MapPin size={20} /> },
+      { to: '/admin/zones', label: 'Zonas', icon: <MapPin size={20} /> },
+      { to: '/admin/discounts', label: 'Descuentos', icon: <Tag size={20} /> },
     ];
   }
   if (role === UserRole.DRIVER) {

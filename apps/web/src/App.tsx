@@ -33,6 +33,8 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminDrivers from './pages/admin/AdminDrivers';
 import AdminTrips from './pages/admin/AdminTrips';
+import AdminZones from './pages/admin/AdminZones';
+import AdminDiscounts from './pages/admin/AdminDiscounts';
 
 // Layout
 import Layout from './components/layout/Layout';
@@ -247,6 +249,22 @@ export default function App() {
             <Layout>
               <AdminTrips />
             </Layout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/admin/zones"
+        element={
+          <PrivateRoute roles={[UserRole.ADMIN]}>
+            <Layout><AdminZones /></Layout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/admin/discounts"
+        element={
+          <PrivateRoute roles={[UserRole.ADMIN]}>
+            <Layout><AdminDiscounts /></Layout>
           </PrivateRoute>
         }
       />

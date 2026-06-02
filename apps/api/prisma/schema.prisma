@@ -128,6 +128,11 @@ model Trip {
   passengerRating Int?
   driverRating    Int?
   cancelReason    String?
+  cancelledBy     String?
+  cancellationFee Float?
+  discountCode    String?
+  discountAmount  Float?
+  surgeMultiplier Float     @default(1.0)
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
 
@@ -386,4 +391,32 @@ enum JobStatus {
   COMPLETED
   CANCELLED
   DISPUTED
+}
+
+model ServiceZone {
+  id        String   @id @default(uuid())
+  name      String
+  centerLat Float
+  centerLng Float
+  radiusKm  Float
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("service_zones")
+}
+
+model DiscountCode {
+  id              String    @id @default(uuid())
+  code            String    @unique
+  description     String?
+  discountPercent Int
+  maxUses         Int       @default(1)
+  usedCount       Int       @default(0)
+  minOrderAmount  Float?
+  expiresAt       DateTime?
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+
+  @@map("discount_codes")
 }

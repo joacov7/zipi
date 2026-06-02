@@ -7,19 +7,32 @@ import {
 import { TripStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { ZonesService } from '../zones/zones.service';
+import { DiscountsService } from '../discounts/discounts.service';
 import { CreateTripDto, UpdateTripStatusDto, RateTripDto, EstimatePriceDto } from './dto/trip.dto';
-import { PRICING } from '@zipi/shared';
+import { PRICING, SURGE_SCHEDULE, CANCELLATION_FEE_AFTER_ACCEPT } from '@zipi/shared';
 
 @Injectable()
 export class TripsService {
   constructor(
     private prisma: PrismaService,
     private notifications: NotificationsService,
+    private zones: ZonesService,
+    private discounts: DiscountsService,
   ) {}
+
+  getSurgeMultiplier(): { multiplier: number; label: string | null } {
+    // Argentina is UTC-3
+    const argHour = new Date(Date.now() - 3 * 60 * 60 * 1000).getUTCHours();
+    for (const { hours, multiplier, label } of SURGE_SCHEDULE) {
+      if (hours.includes(argHour)) return { multiplier, label };
+    }
+    return { multiplier: 1.0, label: null };
+  }
 
   async estimatePrice(dto: EstimatePriceDto) {
     const distance = this.haversine(dto.originLat, dto.originLng, dto.destLat, dto.destLng);
-    const estimatedMinutes = Math.ceil((distance / 30) * 60); // avg 30 km/h in city
+    const estimatedMinutes = Math.ceil((distance / 30) * 60);
 
     const { BASE_FARE, PER_KM, PER_MINUTE } = PRICING.REMIS;
     const breakdown = {
@@ -27,12 +40,26 @@ export class TripsService {
       distanceFare: Math.ceil(distance * PER_KM),
       timeFare: Math.ceil(estimatedMinutes * PER_MINUTE),
     };
-    const estimatedPrice = breakdown.baseFare + breakdown.distanceFare + breakdown.timeFare;
+    const basePrice = breakdown.baseFare + breakdown.distanceFare + breakdown.timeFare;
+    const { multiplier: surgeMultiplier, label: surgeLabel } = this.getSurgeMultiplier();
+    const estimatedPrice = Math.ceil(basePrice * surgeMultiplier);
 
-    return { estimatedPrice, estimatedMinutes, distanceKm: Math.round(distance * 10) / 10, breakdown };
+    return {
+      estimatedPrice,
+      estimatedMinutes,
+      distanceKm: Math.round(distance * 10) / 10,
+      breakdown,
+      surgeMultiplier,
+      surgeLabel,
+    };
   }
 
   async create(passengerId: string, dto: CreateTripDto) {
+    const withinCoverage = await this.zones.isWithinCoverage(dto.originLat, dto.originLng);
+    if (!withinCoverage) {
+      throw new BadRequestException('Tu ubicación está fuera de nuestra zona de cobertura');
+    }
+
     const estimate = await this.estimatePrice({
       originLat: dto.originLat,
       originLng: dto.originLng,
@@ -40,13 +67,33 @@ export class TripsService {
       destLng: dto.destLng,
     });
 
+    let discountAmount = 0;
+    let appliedCode: string | undefined;
+
+    if (dto.discountCode) {
+      const result = await this.discounts.validate(dto.discountCode, estimate.estimatedPrice);
+      discountAmount = result.discountAmount;
+      appliedCode = dto.discountCode.toUpperCase();
+      await this.discounts.redeem(appliedCode);
+    }
+
+    const finalEstimatedPrice = Math.max(0, estimate.estimatedPrice - discountAmount);
+
     return this.prisma.trip.create({
       data: {
         passengerId,
-        ...dto,
-        estimatedPrice: estimate.estimatedPrice,
+        originLat: dto.originLat,
+        originLng: dto.originLng,
+        originAddress: dto.originAddress,
+        destLat: dto.destLat,
+        destLng: dto.destLng,
+        destAddress: dto.destAddress,
+        estimatedPrice: finalEstimatedPrice,
         estimatedMinutes: estimate.estimatedMinutes,
         distanceKm: estimate.distanceKm,
+        surgeMultiplier: estimate.surgeMultiplier,
+        discountCode: appliedCode,
+        discountAmount: discountAmount > 0 ? discountAmount : undefined,
       },
       include: {
         passenger: { select: { id: true, name: true, phone: true, avatarUrl: true } },
@@ -121,6 +168,15 @@ export class TripsService {
 
     const updateData: any = { status: dto.status };
     if (dto.cancelReason) updateData.cancelReason = dto.cancelReason;
+
+    if (dto.status === TripStatus.CANCELLED) {
+      updateData.cancelledBy = userId;
+      // Charge passenger if they cancel after driver accepted
+      if (trip.status === TripStatus.ACCEPTED && isPassenger) {
+        updateData.cancellationFee = CANCELLATION_FEE_AFTER_ACCEPT;
+      }
+    }
+
     if (dto.status === TripStatus.COMPLETED) {
       updateData.finalPrice = trip.estimatedPrice;
       await this.prisma.driver.update({
@@ -199,7 +255,7 @@ export class TripsService {
     });
   }
 
-  async getPendingTrips(vehicleType?: string) {
+  async getPendingTrips() {
     return this.prisma.trip.findMany({
       where: { status: TripStatus.PENDING },
       include: {

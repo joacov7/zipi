@@ -12,6 +12,8 @@ import { GatewayModule } from './gateway/gateway.module';
 import { FreightModule } from './freight/freight.module';
 import { ServicesModule } from './services/services.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { ZonesModule } from './zones/zones.module';
+import { DiscountsModule } from './discounts/discounts.module';
 
 @Module({
   imports: [
@@ -28,6 +30,8 @@ import { NotificationsModule } from './notifications/notifications.module';
     FreightModule,
     ServicesModule,
     NotificationsModule,
+    ZonesModule,
+    DiscountsModule,
   ],
 })
 export class AppModule {}

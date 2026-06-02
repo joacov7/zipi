@@ -4,8 +4,9 @@ import { api } from '../../lib/api';
 import { useEffect, useState, lazy, Suspense } from 'react';
 import { getSocket } from '../../lib/socket';
 import { SocketEvent } from '@zipi/shared';
-import { Phone, Star, MapPin, Car, Clock } from 'lucide-react';
+import { Phone, Star, MapPin, Car, Clock, AlertTriangle } from 'lucide-react';
 import TripChat from '../../components/chat/TripChat';
+import { CANCELLATION_FEE_AFTER_ACCEPT } from '@zipi/shared';
 
 const TripMap = lazy(() => import('../../components/map/TripMap'));
 
@@ -178,15 +179,28 @@ export default function TripTracking() {
       )}
 
       {['PENDING', 'ACCEPTED'].includes(trip.status) && (
-        <button
-          onClick={() => {
-            if (confirm('¿Cancelar el viaje?')) cancelMutation.mutate();
-          }}
-          className="btn-danger w-full"
-          disabled={cancelMutation.isPending}
-        >
-          {cancelMutation.isPending ? 'Cancelando...' : 'Cancelar viaje'}
-        </button>
+        <div className="space-y-2">
+          {trip.status === 'ACCEPTED' && (
+            <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm">
+              <AlertTriangle size={16} className="text-amber-500 shrink-0" />
+              <span className="text-amber-700">
+                Cancelar ahora tiene un cargo de <strong>${CANCELLATION_FEE_AFTER_ACCEPT.toLocaleString('es-AR')}</strong>
+              </span>
+            </div>
+          )}
+          <button
+            onClick={() => {
+              const msg = trip.status === 'ACCEPTED'
+                ? `¿Cancelar el viaje? Se aplicará un cargo de $${CANCELLATION_FEE_AFTER_ACCEPT.toLocaleString('es-AR')}`
+                : '¿Cancelar el viaje?';
+              if (confirm(msg)) cancelMutation.mutate();
+            }}
+            className="btn-danger w-full"
+            disabled={cancelMutation.isPending}
+          >
+            {cancelMutation.isPending ? 'Cancelando...' : 'Cancelar viaje'}
+          </button>
+        </div>
       )}
 
       {trip.status === 'COMPLETED' && (

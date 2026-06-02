@@ -39,3 +39,13 @@ export const DEFAULT_MAP_CENTER = {
 
 // Pagination defaults
 export const DEFAULT_PAGE_SIZE = 20;
+
+// Cancellation penalty (ARS) charged to passenger when cancelling after driver accepted
+export const CANCELLATION_FEE_AFTER_ACCEPT = 1000;
+
+// Surge pricing multipliers by hour (Argentina time, UTC-3)
+export const SURGE_SCHEDULE: Array<{ hours: number[]; multiplier: number; label: string }> = [
+  { hours: [7, 8, 9],        multiplier: 1.5, label: 'Hora pico mañana' },
+  { hours: [17, 18, 19, 20], multiplier: 1.5, label: 'Hora pico tarde' },
+  { hours: [23, 0, 1, 2],    multiplier: 1.3, label: 'Tarifa nocturna' },
+];

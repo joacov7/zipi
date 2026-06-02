@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
-import { MapPin, Navigation, Clock, DollarSign } from 'lucide-react';
+import { MapPin, Navigation, Clock, Tag, Zap, X } from 'lucide-react';
 import { DEFAULT_MAP_CENTER } from '@zipi/shared';
 import AddressInput from '../../components/ui/AddressInput';
 
@@ -10,6 +10,13 @@ interface Estimate {
   estimatedMinutes: number;
   distanceKm: number;
   breakdown: { baseFare: number; distanceFare: number; timeFare: number };
+  surgeMultiplier: number;
+  surgeLabel: string | null;
+}
+
+interface DiscountResult {
+  discountPercent: number;
+  discountAmount: number;
 }
 
 const QUICK_DESTINATIONS = [
@@ -23,6 +30,10 @@ export default function RequestTrip() {
   const [step, setStep] = useState<'form' | 'confirm'>('form');
   const [loading, setLoading] = useState(false);
   const [estimate, setEstimate] = useState<Estimate | null>(null);
+  const [discountCode, setDiscountCode] = useState('');
+  const [discount, setDiscount] = useState<DiscountResult | null>(null);
+  const [discountError, setDiscountError] = useState('');
+  const [discountLoading, setDiscountLoading] = useState(false);
   const [form, setForm] = useState({
     originAddress: '',
     originLat: DEFAULT_MAP_CENTER.lat,
@@ -48,14 +59,30 @@ export default function RequestTrip() {
         destLng: destData.destLng || DEFAULT_MAP_CENTER.lng - 0.05,
       });
       setEstimate(data);
-      if (dest) {
-        setForm((f) => ({ ...f, ...destData, destLat: dest.lat, destLng: dest.lng }));
-      }
+      if (dest) setForm((f) => ({ ...f, ...destData, destLat: dest.lat, destLng: dest.lng }));
       setStep('confirm');
     } catch (err: any) {
       alert(err.response?.data?.message || 'Error al estimar');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const applyDiscount = async () => {
+    if (!discountCode.trim() || !estimate) return;
+    setDiscountLoading(true);
+    setDiscountError('');
+    try {
+      const { data } = await api.post('/discounts/validate', {
+        code: discountCode.trim().toUpperCase(),
+        orderAmount: estimate.estimatedPrice,
+      });
+      setDiscount(data);
+    } catch (err: any) {
+      setDiscountError(err.response?.data?.message || 'Código inválido');
+      setDiscount(null);
+    } finally {
+      setDiscountLoading(false);
     }
   };
 
@@ -69,6 +96,7 @@ export default function RequestTrip() {
         destLat: form.destLat || DEFAULT_MAP_CENTER.lat - 0.05,
         destLng: form.destLng || DEFAULT_MAP_CENTER.lng - 0.05,
         destAddress: form.destAddress,
+        discountCode: discount ? discountCode.trim().toUpperCase() : undefined,
       });
       navigate(`/trip/${data.id}`);
     } catch (err: any) {
@@ -79,6 +107,8 @@ export default function RequestTrip() {
   };
 
   if (step === 'confirm' && estimate) {
+    const finalPrice = estimate.estimatedPrice - (discount?.discountAmount ?? 0);
+
     return (
       <div className="max-w-lg mx-auto space-y-6">
         <div>
@@ -107,6 +137,17 @@ export default function RequestTrip() {
           </div>
         </div>
 
+        {/* Surge alert */}
+        {estimate.surgeMultiplier > 1 && (
+          <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl p-3">
+            <Zap size={18} className="text-amber-500 shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-amber-800">{estimate.surgeLabel}</p>
+              <p className="text-xs text-amber-600">Tarifa ×{estimate.surgeMultiplier} activa por alta demanda</p>
+            </div>
+          </div>
+        )}
+
         <div className="card">
           <h3 className="font-semibold text-gray-900 mb-4">Estimación de precio</h3>
           <div className="space-y-2 text-sm">
@@ -119,18 +160,66 @@ export default function RequestTrip() {
               <span>${estimate.breakdown.distanceFare.toLocaleString('es-AR')}</span>
             </div>
             <div className="flex justify-between text-gray-600">
-              <span>Tiempo est. ({estimate.estimatedMinutes} min)</span>
+              <span>Tiempo ({estimate.estimatedMinutes} min)</span>
               <span>${estimate.breakdown.timeFare.toLocaleString('es-AR')}</span>
             </div>
+            {estimate.surgeMultiplier > 1 && (
+              <div className="flex justify-between text-amber-600">
+                <span>Tarifa dinámica ×{estimate.surgeMultiplier}</span>
+                <span>incluida</span>
+              </div>
+            )}
+            {discount && (
+              <div className="flex justify-between text-green-600">
+                <span>Descuento ({discount.discountPercent}%)</span>
+                <span>-${discount.discountAmount.toLocaleString('es-AR')}</span>
+              </div>
+            )}
             <div className="flex justify-between font-bold text-gray-900 pt-2 border-t border-gray-100 text-base">
               <span>Total estimado</span>
-              <span className="text-zipi-600">${estimate.estimatedPrice.toLocaleString('es-AR')}</span>
+              <span className="text-zipi-600">${finalPrice.toLocaleString('es-AR')}</span>
             </div>
           </div>
           <div className="flex items-center gap-2 mt-3 text-sm text-gray-500">
             <Clock size={14} />
             <span>Tiempo estimado: {estimate.estimatedMinutes} minutos</span>
           </div>
+        </div>
+
+        {/* Discount code */}
+        <div className="card">
+          <p className="text-sm font-medium text-gray-700 mb-2">Código de descuento</p>
+          {discount ? (
+            <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-xl px-3 py-2">
+              <div className="flex items-center gap-2">
+                <Tag size={14} className="text-green-600" />
+                <span className="text-sm font-semibold text-green-700">
+                  {discountCode.toUpperCase()} — {discount.discountPercent}% off
+                </span>
+              </div>
+              <button onClick={() => { setDiscount(null); setDiscountCode(''); }} className="text-green-500 hover:text-green-700">
+                <X size={16} />
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <input
+                className="input flex-1 text-sm"
+                placeholder="Ej: ZIPI10"
+                value={discountCode}
+                onChange={(e) => { setDiscountCode(e.target.value); setDiscountError(''); }}
+                onKeyDown={(e) => e.key === 'Enter' && applyDiscount()}
+              />
+              <button
+                onClick={applyDiscount}
+                disabled={!discountCode.trim() || discountLoading}
+                className="btn-secondary text-sm px-4"
+              >
+                {discountLoading ? '...' : 'Aplicar'}
+              </button>
+            </div>
+          )}
+          {discountError && <p className="text-xs text-red-600 mt-1">{discountError}</p>}
         </div>
 
         <div className="flex gap-3">
@@ -161,14 +250,7 @@ export default function RequestTrip() {
           <AddressInput
             value={form.originAddress}
             onChange={(val) => setForm((f) => ({ ...f, originAddress: val }))}
-            onSelect={(r) =>
-              setForm((f) => ({
-                ...f,
-                originAddress: r.address,
-                originLat: r.lat,
-                originLng: r.lng,
-              }))
-            }
+            onSelect={(r) => setForm((f) => ({ ...f, originAddress: r.address, originLat: r.lat, originLng: r.lng }))}
             placeholder="Tu dirección actual"
           />
         </div>
@@ -180,14 +262,7 @@ export default function RequestTrip() {
           <AddressInput
             value={form.destAddress}
             onChange={(val) => setForm((f) => ({ ...f, destAddress: val }))}
-            onSelect={(r) =>
-              setForm((f) => ({
-                ...f,
-                destAddress: r.address,
-                destLat: r.lat,
-                destLng: r.lng,
-              }))
-            }
+            onSelect={(r) => setForm((f) => ({ ...f, destAddress: r.address, destLat: r.lat, destLng: r.lng }))}
             placeholder="¿A dónde vas?"
           />
         </div>
