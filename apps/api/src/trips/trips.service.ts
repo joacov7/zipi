@@ -6,12 +6,16 @@ import {
 } from '@nestjs/common';
 import { TripStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateTripDto, UpdateTripStatusDto, RateTripDto, EstimatePriceDto } from './dto/trip.dto';
 import { PRICING } from '@zipi/shared';
 
 @Injectable()
 export class TripsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notifications: NotificationsService,
+  ) {}
 
   async estimatePrice(dto: EstimatePriceDto) {
     const distance = this.haversine(dto.originLat, dto.originLng, dto.destLat, dto.destLng);
@@ -75,7 +79,7 @@ export class TripsService {
       throw new BadRequestException('El viaje ya no está disponible');
     }
 
-    return this.prisma.trip.update({
+    const updated = await this.prisma.trip.update({
       where: { id: tripId },
       data: { driverId: driver.id, status: TripStatus.ACCEPTED },
       include: {
@@ -83,6 +87,15 @@ export class TripsService {
         driver: { include: { user: { select: { id: true, name: true, phone: true, avatarUrl: true } } } },
       },
     });
+
+    this.notifications.sendToUser(
+      trip.passengerId,
+      '¡Conductor en camino!',
+      `${updated.driver!.user.name} aceptó tu viaje y está en camino`,
+      { tripId },
+    );
+
+    return updated;
   }
 
   async updateStatus(userId: string, tripId: string, dto: UpdateTripStatusDto) {
@@ -116,7 +129,35 @@ export class TripsService {
       });
     }
 
-    return this.prisma.trip.update({ where: { id: tripId }, data: updateData });
+    const result = await this.prisma.trip.update({ where: { id: tripId }, data: updateData });
+
+    if (dto.status === TripStatus.IN_PROGRESS) {
+      this.notifications.sendToUser(
+        trip.passenger.id,
+        '¡Viaje iniciado!',
+        'Tu viaje ha comenzado. ¡Buen viaje!',
+        { tripId },
+      );
+    } else if (dto.status === TripStatus.COMPLETED) {
+      this.notifications.sendToUser(
+        trip.passenger.id,
+        '¡Llegaste!',
+        `Tu viaje ha finalizado. Precio: $${trip.estimatedPrice}`,
+        { tripId },
+      );
+    } else if (dto.status === TripStatus.CANCELLED) {
+      const otherUserId = isDriver ? trip.passenger.id : trip.driver?.user.id;
+      if (otherUserId) {
+        this.notifications.sendToUser(
+          otherUserId,
+          'Viaje cancelado',
+          dto.cancelReason || 'El viaje fue cancelado',
+          { tripId },
+        );
+      }
+    }
+
+    return result;
   }
 
   async rateTrip(userId: string, tripId: string, dto: RateTripDto) {

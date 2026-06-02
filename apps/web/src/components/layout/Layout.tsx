@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import { useNotifications } from '../../hooks/useNotifications';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../stores/auth.store';
 import { UserRole } from '@zipi/shared';
@@ -61,6 +62,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
+  useNotifications();
 
   const navItems = getNavItems(user?.role || '');
 
