@@ -1,13 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { useAuthStore } from '../../stores/auth.store';
-import { Wallet, ArrowUpCircle, ArrowDownCircle, Gift, Settings } from 'lucide-react';
+import { Plus, Send, CreditCard, Wallet, Gift, ArrowUpCircle, ArrowDownCircle, Settings } from 'lucide-react';
 
-const TYPE_LABELS: Record<string, { label: string; color: string; icon: any }> = {
-  CREDIT:           { label: 'Crédito',       color: 'text-green-600', icon: ArrowUpCircle },
-  DEBIT:            { label: 'Débito',         color: 'text-red-600',   icon: ArrowDownCircle },
-  REFERRAL_BONUS:   { label: 'Bono referido',  color: 'text-purple-600', icon: Gift },
-  ADMIN_ADJUSTMENT: { label: 'Ajuste admin',   color: 'text-blue-600',  icon: Settings },
+const TX_ICON: Record<string, any> = {
+  CREDIT:           ArrowUpCircle,
+  DEBIT:            ArrowDownCircle,
+  REFERRAL_BONUS:   Gift,
+  ADMIN_ADJUSTMENT: Settings,
 };
 
 export default function WalletPage() {
@@ -18,7 +18,7 @@ export default function WalletPage() {
     queryFn: () => api.get('/wallet').then((r) => r.data),
   });
 
-  const { data: txs = [] } = useQuery({
+  const { data: txs = [] } = useQuery<any[]>({
     queryKey: ['wallet-transactions'],
     queryFn: () => api.get('/wallet/transactions').then((r) => r.data),
   });
@@ -26,43 +26,128 @@ export default function WalletPage() {
   const balance = wallet?.balance ?? user?.walletBalance ?? 0;
 
   return (
-    <div className="max-w-lg mx-auto space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Mi billetera</h1>
+    <div className="max-w-lg mx-auto">
+      <h1 className="text-[26px] font-extrabold text-zipi-ink tracking-tight mb-5">Billetera</h1>
 
-      <div className="card bg-gradient-to-br from-zipi-500 to-zipi-700 text-white">
-        <div className="flex items-center gap-3 mb-4">
-          <Wallet size={24} />
-          <p className="font-medium opacity-90">Saldo disponible</p>
+      {/* Balance card */}
+      <div
+        className="relative rounded-[22px] p-6 overflow-hidden mb-4"
+        style={{
+          background:
+            'linear-gradient(140deg, rgba(255,255,255,0.14), rgba(0,0,0,0.06) 45%, rgba(0,0,0,0.32)), #EF9008',
+          boxShadow: '0 16px 34px -18px rgba(239,144,8,0.7)',
+          color: '#fff',
+        }}
+      >
+        <p className="text-[13px] font-semibold opacity-90 mb-1">Saldo disponible</p>
+        <p
+          className="font-extrabold mb-5 tracking-tight"
+          style={{ fontSize: 36, letterSpacing: '-0.02em' }}
+        >
+          ${balance.toLocaleString('es-AR')}
+        </p>
+        <div className="flex items-end justify-between">
+          <span className="text-[13.5px] font-semibold tracking-[0.1em] opacity-90">ARS</span>
+          <span className="text-[14px] font-extrabold tracking-[0.06em]">ZIPI</span>
         </div>
-        <p className="text-5xl font-bold">${balance.toLocaleString('es-AR')}</p>
-        <p className="text-sm opacity-75 mt-2">ARS · Se aplica automáticamente al pagar viajes</p>
+        <div className="absolute right-[-24px] top-[-24px] pointer-events-none" style={{ color: 'rgba(255,255,255,0.12)' }}>
+          <Wallet size={120} strokeWidth={1.4} />
+        </div>
       </div>
 
-      <div className="card space-y-1">
-        <h2 className="font-semibold text-gray-900 mb-3">Movimientos</h2>
-        {txs.length === 0 && (
-          <p className="text-gray-500 text-sm py-4 text-center">Sin movimientos aún</p>
-        )}
-        {txs.map((tx: any) => {
-          const meta = TYPE_LABELS[tx.type] || { label: tx.type, color: 'text-gray-600', icon: ArrowUpCircle };
-          const Icon = meta.icon;
-          return (
-            <div key={tx.id} className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
-              <div className="flex items-center gap-3">
-                <div className={`w-9 h-9 rounded-full flex items-center justify-center bg-gray-50`}>
-                  <Icon size={18} className={meta.color} />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{tx.description}</p>
-                  <p className="text-xs text-gray-400">
-                    {new Date(tx.createdAt).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })}
-                    {' · '}{meta.label}
-                  </p>
-                </div>
-              </div>
-              <span className={`font-bold ${tx.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {tx.amount >= 0 ? '+' : ''}${Math.abs(tx.amount).toLocaleString('es-AR')}
+      {/* Quick actions */}
+      <div className="flex gap-3 mb-6">
+        {[
+          { icon: Plus, label: 'Cargar saldo' },
+          { icon: Send, label: 'Enviar' },
+        ].map(({ icon: Icon, label }) => (
+          <button
+            key={label}
+            className="flex-1 flex items-center justify-center gap-2 h-[50px] rounded-[14px] bg-white border border-zipi-rim text-[14.5px] font-bold text-zipi-ink shadow-zipi hover:shadow-md transition-shadow"
+          >
+            <span className="text-zipi-500">
+              <Icon size={19} strokeWidth={2.2} />
+            </span>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Payment methods */}
+      <div className="flex items-baseline justify-between mb-3">
+        <h2 className="text-[17px] font-bold text-zipi-ink tracking-tight">Medios de pago</h2>
+        <button className="text-[13.5px] font-semibold text-zipi-500">Administrar</button>
+      </div>
+      <div className="flex flex-col gap-2.5 mb-6">
+        {[
+          { icon: CreditCard, name: 'Visa ···· 4821', tag: 'Predeterminada' },
+          { icon: Wallet, name: 'Efectivo', tag: '' },
+          { icon: CreditCard, name: 'Mastercard ···· 1190', tag: '' },
+        ].map(({ icon: Icon, name, tag }, i) => (
+          <div
+            key={i}
+            className="flex items-center gap-3 bg-white border border-zipi-rim rounded-[16px] p-3.5"
+          >
+            <div className="w-[42px] h-[42px] rounded-[11px] bg-zipi-surface2 flex items-center justify-center text-zipi-ink">
+              <Icon size={21} />
+            </div>
+            <p className="flex-1 text-[14.5px] font-bold text-zipi-ink">{name}</p>
+            {tag && (
+              <span
+                className="text-[11.5px] font-bold rounded-[7px] px-2.5 py-1"
+                style={{ background: 'rgba(239,144,8,0.12)', color: '#d46a04' }}
+              >
+                {tag}
               </span>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Transactions */}
+      <div className="flex items-baseline justify-between mb-3">
+        <h2 className="text-[17px] font-bold text-zipi-ink tracking-tight">Movimientos</h2>
+        {txs.length > 5 && (
+          <button className="text-[13.5px] font-semibold text-zipi-500">Ver todo</button>
+        )}
+      </div>
+      <div className="bg-white border border-zipi-rim rounded-[22px] shadow-zipi overflow-hidden">
+        {txs.length === 0 && (
+          <p className="text-[14px] text-zipi-muted text-center py-8">Sin movimientos aún</p>
+        )}
+        {txs.map((tx: any, i: number) => {
+          const pos = tx.amount > 0;
+          const Icon = TX_ICON[tx.type] ?? ArrowUpCircle;
+          return (
+            <div
+              key={tx.id}
+              className={`flex items-center gap-3 px-4 py-3.5 ${i < txs.length - 1 ? 'border-b border-zipi-rim' : ''}`}
+            >
+              <div
+                className="w-10 h-10 rounded-[11px] flex items-center justify-center shrink-0"
+                style={{
+                  background: pos ? 'rgba(14,158,110,0.12)' : 'rgba(239,144,8,0.08)',
+                  color: pos ? '#0E9E6E' : '#6b6760',
+                }}
+              >
+                <Icon size={19} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[14px] font-bold text-zipi-ink truncate">{tx.description}</p>
+                <p className="text-[12px] text-zipi-muted">
+                  {new Date(tx.createdAt).toLocaleDateString('es-AR', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                  })}
+                </p>
+              </div>
+              <p
+                className="text-[14.5px] font-extrabold shrink-0"
+                style={{ color: pos ? '#0E9E6E' : '#1a1714' }}
+              >
+                {pos ? '+' : '−'}${Math.abs(tx.amount).toLocaleString('es-AR')}
+              </p>
             </div>
           );
         })}

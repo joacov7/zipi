@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api';
-import { Car, Package, Clock, Star, MapPin, X, Navigation, Receipt } from 'lucide-react';
+import { Car, Package, Star, MapPin, Navigation, Receipt, X, Clock, ChevronDown } from 'lucide-react';
 
-type Tab = 'trips' | 'deliveries';
+type Filter = 'all' | 'trips' | 'deliveries';
 
 const STATUS_LABELS: Record<string, string> = {
   PENDING: 'Pendiente',
@@ -16,118 +16,136 @@ const STATUS_LABELS: Record<string, string> = {
   DELIVERED: 'Entregado',
 };
 
-const STATUS_COLORS: Record<string, string> = {
-  PENDING: 'bg-amber-100 text-amber-700',
-  ACCEPTED: 'bg-blue-100 text-blue-700',
-  IN_PROGRESS: 'bg-green-100 text-green-700',
-  COMPLETED: 'bg-gray-100 text-gray-700',
-  CANCELLED: 'bg-red-100 text-red-700',
-  PICKED_UP: 'bg-blue-100 text-blue-700',
-  IN_TRANSIT: 'bg-indigo-100 text-indigo-700',
-  DELIVERED: 'bg-gray-100 text-gray-700',
-};
+function groupByDate(items: any[]) {
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const map = new Map<string, any[]>();
+  items.forEach((item) => {
+    const d = new Date(item.createdAt);
+    let label: string;
+    if (d.toDateString() === today.toDateString()) label = 'Hoy';
+    else if (d.toDateString() === yesterday.toDateString()) label = 'Ayer';
+    else
+      label = d.toLocaleDateString('es-AR', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+      });
+    if (!map.has(label)) map.set(label, []);
+    map.get(label)!.push(item);
+  });
+  return Array.from(map.entries()).map(([label, items]) => ({ label, items }));
+}
 
-function TripReceipt({ trip, onClose }: { trip: any; onClose: () => void }) {
+function TripReceiptModal({ trip, onClose }: { trip: any; onClose: () => void }) {
   const price = trip.finalPrice ?? trip.estimatedPrice;
   const paid = price - (trip.discountAmount ?? 0);
-
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl">
-        <div className="flex items-center justify-between p-5 border-b border-gray-100">
+      <div className="bg-white rounded-[26px] w-full max-w-sm shadow-xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-zipi-rim">
           <div className="flex items-center gap-2">
-            <Receipt size={20} className="text-zipi-500" />
-            <h2 className="font-bold text-gray-900">Recibo del viaje</h2>
+            <Receipt size={18} className="text-zipi-500" />
+            <h2 className="font-bold text-zipi-ink text-[15px]">Recibo del viaje</h2>
           </div>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
-            <X size={18} />
+          <button
+            onClick={onClose}
+            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-zipi-surface2 text-zipi-muted"
+          >
+            <X size={17} />
           </button>
         </div>
-
         <div className="p-5 space-y-4">
-          {/* Status + date */}
           <div className="flex items-center justify-between">
-            <span className={`badge ${STATUS_COLORS[trip.status] || 'bg-gray-100 text-gray-700'}`}>
-              {STATUS_LABELS[trip.status] || trip.status}
+            <span
+              className="text-[11.5px] font-bold rounded-full px-3 py-1"
+              style={
+                trip.status === 'COMPLETED'
+                  ? { background: 'rgba(14,158,110,0.14)', color: '#0E9E6E' }
+                  : trip.status === 'CANCELLED'
+                    ? { background: 'rgba(224,62,99,0.12)', color: '#E03E63' }
+                    : { background: 'rgba(239,144,8,0.12)', color: '#C77A00' }
+              }
+            >
+              {STATUS_LABELS[trip.status] ?? trip.status}
             </span>
-            <span className="text-xs text-gray-400">
+            <span className="text-[11.5px] text-zipi-faint">
               {new Date(trip.createdAt).toLocaleString('es-AR', {
-                day: '2-digit', month: 'short', year: 'numeric',
-                hour: '2-digit', minute: '2-digit',
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
               })}
             </span>
           </div>
-
-          {/* Route */}
-          <div className="space-y-2 bg-gray-50 rounded-xl p-3">
-            <div className="flex items-start gap-2">
-              <Navigation size={14} className="text-green-500 mt-0.5 shrink-0" />
+          <div className="bg-zipi-surface2 rounded-[13px] p-3.5 space-y-2.5">
+            <div className="flex items-start gap-2.5">
+              <Navigation size={13} className="text-[#0E9E6E] mt-0.5 shrink-0" />
               <div>
-                <p className="text-xs text-gray-400">Origen</p>
-                <p className="text-sm font-medium text-gray-800">{trip.originAddress}</p>
+                <p className="text-[11px] text-zipi-faint">Origen</p>
+                <p className="text-[13.5px] font-semibold text-zipi-ink">{trip.originAddress}</p>
               </div>
             </div>
-            <div className="flex items-start gap-2">
-              <MapPin size={14} className="text-red-500 mt-0.5 shrink-0" />
+            <div className="flex items-start gap-2.5">
+              <MapPin size={13} className="text-zipi-500 mt-0.5 shrink-0" />
               <div>
-                <p className="text-xs text-gray-400">Destino</p>
-                <p className="text-sm font-medium text-gray-800">{trip.destAddress}</p>
+                <p className="text-[11px] text-zipi-faint">Destino</p>
+                <p className="text-[13.5px] font-semibold text-zipi-ink">{trip.destAddress}</p>
               </div>
             </div>
             {trip.distanceKm && (
-              <p className="text-xs text-gray-400 flex items-center gap-1 pt-1">
-                <Clock size={12} />
+              <p className="text-[11.5px] text-zipi-faint flex items-center gap-1 pt-1">
+                <Clock size={11} />
                 {trip.distanceKm} km · {trip.estimatedMinutes} min
               </p>
             )}
           </div>
-
-          {/* Driver */}
           {trip.driver && (
-            <div className="flex items-center gap-3 border border-gray-100 rounded-xl p-3">
-              <div className="w-10 h-10 bg-zipi-100 rounded-full flex items-center justify-center font-bold text-zipi-600">
+            <div className="flex items-center gap-3 border border-zipi-rim rounded-[13px] p-3">
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white text-[14px] shrink-0"
+                style={{ background: 'linear-gradient(135deg,#EF9008,#D46A04)' }}
+              >
                 {trip.driver.user.name.charAt(0)}
               </div>
               <div className="flex-1">
-                <p className="font-medium text-sm text-gray-900">{trip.driver.user.name}</p>
-                <p className="text-xs text-gray-500">{trip.driver.vehicleModel} · {trip.driver.vehiclePlate}</p>
+                <p className="text-[13.5px] font-semibold text-zipi-ink">{trip.driver.user.name}</p>
+                <p className="text-[12px] text-zipi-muted">
+                  {trip.driver.vehicleModel} · {trip.driver.vehiclePlate}
+                </p>
               </div>
               {trip.passengerRating && (
                 <div className="flex items-center gap-1">
-                  <Star size={14} className="text-amber-400 fill-amber-400" />
-                  <span className="text-sm font-medium">{trip.passengerRating}</span>
+                  <Star size={13} className="text-amber-400 fill-amber-400" />
+                  <span className="text-[13px] font-semibold">{trip.passengerRating}</span>
                 </div>
               )}
             </div>
           )}
-
-          {/* Price breakdown */}
-          <div className="border-t border-dashed border-gray-200 pt-3 space-y-2">
-            <div className="flex justify-between text-sm text-gray-600">
+          <div className="border-t border-dashed border-zipi-rim pt-3 space-y-2">
+            <div className="flex justify-between text-[13.5px] text-zipi-muted">
               <span>Precio base</span>
               <span>${price?.toLocaleString('es-AR')}</span>
             </div>
             {trip.surgeMultiplier > 1 && (
-              <div className="flex justify-between text-sm text-amber-600">
+              <div className="flex justify-between text-[13.5px] text-amber-600">
                 <span>Tarifa dinámica (×{trip.surgeMultiplier})</span>
                 <span>incluida</span>
               </div>
             )}
             {trip.discountAmount > 0 && (
-              <div className="flex justify-between text-sm text-green-600">
+              <div className="flex justify-between text-[13.5px]" style={{ color: '#0E9E6E' }}>
                 <span>Descuento ({trip.discountCode})</span>
                 <span>-${trip.discountAmount?.toLocaleString('es-AR')}</span>
               </div>
             )}
-            {trip.cancellationFee > 0 && (
-              <div className="flex justify-between text-sm text-red-600">
-                <span>Cargo por cancelación</span>
-                <span>${trip.cancellationFee?.toLocaleString('es-AR')}</span>
-              </div>
-            )}
-            <div className="flex justify-between font-bold text-gray-900 text-base border-t border-gray-200 pt-2 mt-1">
+            <div className="flex justify-between font-extrabold text-zipi-ink text-[15px] border-t border-zipi-rim pt-2">
               <span>Total</span>
-              <span className="text-zipi-600">${(paid + (trip.cancellationFee ?? 0)).toLocaleString('es-AR')}</span>
+              <span className="text-zipi-500">
+                ${(paid + (trip.cancellationFee ?? 0)).toLocaleString('es-AR')}
+              </span>
             </div>
           </div>
         </div>
@@ -137,134 +155,163 @@ function TripReceipt({ trip, onClose }: { trip: any; onClose: () => void }) {
 }
 
 export default function PassengerHistory() {
-  const [tab, setTab] = useState<Tab>('trips');
+  const [filter, setFilter] = useState<Filter>('all');
   const [selectedTrip, setSelectedTrip] = useState<any>(null);
 
   const { data: tripsData } = useQuery({
     queryKey: ['my-trips'],
     queryFn: () => api.get('/users/me/trips').then((r) => r.data),
-    enabled: tab === 'trips',
   });
 
   const { data: deliveriesData } = useQuery({
     queryKey: ['my-deliveries'],
     queryFn: () => api.get('/users/me/deliveries').then((r) => r.data),
-    enabled: tab === 'deliveries',
   });
 
-  const trips = tripsData?.data || [];
-  const deliveries = deliveriesData?.data || [];
+  const trips: any[] = tripsData?.data ?? [];
+  const deliveries: any[] = deliveriesData?.data ?? [];
+
+  const allItems = [
+    ...trips.map((t: any) => ({ ...t, _kind: 'trip' })),
+    ...deliveries.map((d: any) => ({ ...d, _kind: 'delivery' })),
+  ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  const displayed =
+    filter === 'all'
+      ? allItems
+      : filter === 'trips'
+        ? allItems.filter((i) => i._kind === 'trip')
+        : allItems.filter((i) => i._kind === 'delivery');
+
+  const groups = groupByDate(displayed);
+
+  const totalSpent = trips
+    .filter((t: any) => t.status === 'COMPLETED')
+    .reduce((sum: number, t: any) => sum + (t.finalPrice ?? t.estimatedPrice ?? 0), 0);
+
+  const FILTERS: { id: Filter; label: string }[] = [
+    { id: 'all', label: 'Todos' },
+    { id: 'trips', label: 'Viajes' },
+    { id: 'deliveries', label: 'Envíos' },
+  ];
 
   return (
-    <div className="space-y-6">
-      {selectedTrip && <TripReceipt trip={selectedTrip} onClose={() => setSelectedTrip(null)} />}
-
-      <h1 className="text-2xl font-bold text-gray-900">Mi historial</h1>
-
-      <div className="flex gap-2">
-        <button
-          onClick={() => setTab('trips')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
-            tab === 'trips' ? 'bg-zipi-500 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
-          }`}
-        >
-          <Car size={16} />
-          Viajes ({tripsData?.total ?? 0})
-        </button>
-        <button
-          onClick={() => setTab('deliveries')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
-            tab === 'deliveries' ? 'bg-blue-500 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
-          }`}
-        >
-          <Package size={16} />
-          Envíos ({deliveriesData?.total ?? 0})
-        </button>
-      </div>
-
-      {tab === 'trips' && (
-        <div className="space-y-3">
-          {trips.length === 0 && (
-            <div className="card text-center py-12">
-              <Car size={48} className="text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">Sin viajes registrados</p>
-            </div>
-          )}
-          {trips.map((trip: any) => (
-            <button
-              key={trip.id}
-              onClick={() => setSelectedTrip(trip)}
-              className="card w-full text-left hover:shadow-md transition-shadow cursor-pointer"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className={`badge ${STATUS_COLORS[trip.status] || 'bg-gray-100 text-gray-700'}`}>
-                      {STATUS_LABELS[trip.status] || trip.status}
-                    </span>
-                    {trip.surgeMultiplier > 1 && (
-                      <span className="badge bg-amber-100 text-amber-700">⚡ ×{trip.surgeMultiplier}</span>
-                    )}
-                    <span className="text-xs text-gray-400">
-                      {new Date(trip.createdAt).toLocaleDateString('es-AR', {
-                        day: '2-digit', month: 'short', year: 'numeric',
-                      })}
-                    </span>
-                  </div>
-                  <p className="font-medium text-gray-900 truncate">→ {trip.destAddress}</p>
-                  {trip.driver && (
-                    <p className="text-sm text-gray-500 mt-1">Conductor: {trip.driver.user.name}</p>
-                  )}
-                  {trip.discountCode && (
-                    <p className="text-xs text-green-600 mt-0.5">🏷 {trip.discountCode} aplicado</p>
-                  )}
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="font-bold text-gray-900">
-                    ${(trip.finalPrice ?? trip.estimatedPrice)?.toLocaleString('es-AR')}
-                  </p>
-                  {trip.passengerRating && (
-                    <div className="flex items-center gap-1 justify-end mt-1">
-                      <Star size={12} className="text-amber-400 fill-amber-400" />
-                      <span className="text-xs text-gray-500">{trip.passengerRating}</span>
-                    </div>
-                  )}
-                  <p className="text-xs text-zipi-400 mt-1">Ver recibo →</p>
-                </div>
-              </div>
-            </button>
-          ))}
-        </div>
+    <div className="max-w-2xl mx-auto">
+      {selectedTrip && (
+        <TripReceiptModal trip={selectedTrip} onClose={() => setSelectedTrip(null)} />
       )}
 
-      {tab === 'deliveries' && (
-        <div className="space-y-3">
-          {deliveries.length === 0 && (
-            <div className="card text-center py-12">
-              <Package size={48} className="text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">Sin envíos registrados</p>
-            </div>
-          )}
-          {deliveries.map((delivery: any) => (
-            <div key={delivery.id} className="card">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className={`badge ${STATUS_COLORS[delivery.status] || 'bg-gray-100 text-gray-700'}`}>
-                      {STATUS_LABELS[delivery.status] || delivery.status}
-                    </span>
-                    <span className="text-xs text-gray-400">
-                      {new Date(delivery.createdAt).toLocaleDateString('es-AR')}
-                    </span>
-                  </div>
-                  <p className="font-medium text-gray-900 truncate">→ {delivery.dropoffAddress}</p>
-                  <p className="text-sm text-gray-500">{delivery.packageDescription}</p>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="font-bold text-gray-900">
-                    ${(delivery.finalPrice ?? delivery.estimatedPrice)?.toLocaleString('es-AR')}
-                  </p>
-                </div>
+      <h1 className="text-[26px] font-extrabold text-zipi-ink tracking-tight mb-5">Actividad</h1>
+
+      {/* Spend summary */}
+      <div className="bg-white border border-zipi-rim rounded-[22px] p-4 shadow-zipi flex items-center gap-3.5 mb-5">
+        <div
+          className="w-[46px] h-[46px] rounded-[13px] flex items-center justify-center shrink-0"
+          style={{ background: 'rgba(239,144,8,0.12)', color: '#EF9008' }}
+        >
+          <Receipt size={23} strokeWidth={2} />
+        </div>
+        <div className="flex-1">
+          <p className="text-[12.5px] text-zipi-muted font-semibold">Total gastado</p>
+          <p
+            className="text-[22px] font-extrabold text-zipi-ink tracking-tight"
+            style={{ letterSpacing: '-0.02em' }}
+          >
+            ${totalSpent.toLocaleString('es-AR')}
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-[18px] font-extrabold text-zipi-ink">{trips.length}</p>
+          <p className="text-[11.5px] text-zipi-muted">servicios</p>
+        </div>
+      </div>
+
+      {/* Filter chips */}
+      <div className="flex gap-2 mb-5">
+        {FILTERS.map((f) => (
+          <button
+            key={f.id}
+            onClick={() => setFilter(f.id)}
+            className="px-4 py-[9px] rounded-full text-[13.5px] font-bold transition-colors border"
+            style={
+              filter === f.id
+                ? { background: '#1A1714', color: '#f4f2ee', borderColor: '#1A1714' }
+                : { background: '#fff', color: '#6b6760', borderColor: '#ebe7df' }
+            }
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Grouped list */}
+      {groups.length === 0 ? (
+        <div className="text-center py-14">
+          <Clock size={44} className="text-zipi-faint mx-auto mb-3 opacity-60" strokeWidth={1.6} />
+          <p className="text-[15px] font-bold text-zipi-muted">Sin actividad todavía</p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {groups.map(({ label, items }) => (
+            <div key={label}>
+              <p className="text-[12px] font-bold text-zipi-faint uppercase tracking-[0.05em] mb-2.5">
+                {label}
+              </p>
+              <div className="flex flex-col gap-2.5">
+                {items.map((item: any) => {
+                  const isTrip = item._kind === 'trip';
+                  const price = item.finalPrice ?? item.estimatedPrice ?? item.price;
+                  const isCompleted = item.status === 'COMPLETED' || item.status === 'DELIVERED';
+                  const isCancelled = item.status === 'CANCELLED';
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => isTrip && setSelectedTrip(item)}
+                      className="flex items-center gap-3 bg-white border border-zipi-rim rounded-[16px] p-3.5 shadow-zipi hover:shadow-md transition-shadow text-left w-full"
+                    >
+                      <div
+                        className="w-[46px] h-[46px] rounded-[13px] flex items-center justify-center shrink-0"
+                        style={
+                          isTrip
+                            ? { background: 'rgba(239,144,8,0.1)', color: '#EF9008' }
+                            : { background: 'rgba(47,107,236,0.1)', color: '#2F6BEC' }
+                        }
+                      >
+                        {isTrip ? (
+                          <Car size={22} strokeWidth={2} />
+                        ) : (
+                          <Package size={22} strokeWidth={2} />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[14.5px] font-bold text-zipi-ink truncate">
+                          {isTrip ? item.destAddress : item.dropoffAddress}
+                        </p>
+                        <p className="text-[12.5px] text-zipi-muted">
+                          {isTrip ? 'Remis' : 'Envío'}
+                          {item.driver?.user?.name ? ` · ${item.driver.user.name}` : ''}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p
+                          className="text-[14.5px] font-bold"
+                          style={{
+                            color: isCancelled ? '#a39e95' : '#1a1714',
+                            textDecoration: isCancelled ? 'line-through' : 'none',
+                          }}
+                        >
+                          ${price?.toLocaleString('es-AR')}
+                        </p>
+                        <p
+                          className="text-[11px] font-bold"
+                          style={{ color: isCancelled ? '#E03E63' : isCompleted ? '#0E9E6E' : '#C77A00' }}
+                        >
+                          {STATUS_LABELS[item.status] ?? item.status}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           ))}

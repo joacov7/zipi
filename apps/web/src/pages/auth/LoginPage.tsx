@@ -26,28 +26,36 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-zipi-50 to-amber-100">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-zipi-bg px-4">
+      <div className="w-full max-w-sm">
+        {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-zipi-500 rounded-2xl mb-4">
-            <span className="text-white font-bold text-3xl">Z</span>
+          <div
+            className="inline-flex items-center justify-center w-[68px] h-[68px] rounded-[20px] mb-4"
+            style={{ background: 'linear-gradient(135deg,#EF9008,#D46A04)' }}
+          >
+            <span className="text-white font-extrabold text-[28px]">Z</span>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Zipi</h1>
-          <p className="text-gray-500 mt-1">Remisería y Motomandado</p>
+          <h1 className="text-[28px] font-extrabold text-zipi-ink tracking-tight">Zipi</h1>
+          <p className="text-[14px] text-zipi-muted mt-1">Remisería y Motomandado</p>
         </div>
 
-        <div className="card">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Iniciar sesión</h2>
+        {/* Card */}
+        <div className="bg-white border border-zipi-rim rounded-[26px] p-6 shadow-zipi">
+          <h2 className="text-[19px] font-extrabold text-zipi-ink mb-5">Iniciar sesión</h2>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">
+            <div
+              className="rounded-[13px] px-4 py-3 mb-4 text-[13.5px] font-medium"
+              style={{ background: 'rgba(224,62,99,0.1)', color: '#E03E63' }}
+            >
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3.5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label className="block text-[12.5px] font-bold text-zipi-ink mb-1.5">Email</label>
               <input
                 type="email"
                 className="input"
@@ -58,7 +66,7 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+              <label className="block text-[12.5px] font-bold text-zipi-ink mb-1.5">Contraseña</label>
               <input
                 type="password"
                 className="input"
@@ -68,20 +76,25 @@ export default function LoginPage() {
                 required
               />
             </div>
-            <button type="submit" disabled={loading} className="btn-primary w-full mt-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="h-[54px] w-full rounded-2xl font-bold text-white transition-opacity disabled:opacity-50 mt-1"
+              style={{ background: '#1A1714' }}
+            >
               {loading ? 'Ingresando...' : 'Ingresar'}
             </button>
           </form>
 
-          <p className="text-center text-sm text-gray-500 mt-4">
+          <p className="text-center text-[13.5px] text-zipi-muted mt-4">
             ¿No tenés cuenta?{' '}
-            <Link to="/register" className="text-zipi-600 font-medium hover:underline">
+            <Link to="/register" className="text-zipi-500 font-bold hover:underline">
               Registrate
             </Link>
           </p>
         </div>
 
-        <p className="text-center text-xs text-gray-400 mt-4">
+        <p className="text-center text-[11.5px] text-zipi-faint mt-4">
           Demo: admin@zipi.ar / juan@example.com — Password123!
         </p>
       </div>

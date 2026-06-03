@@ -35,25 +35,34 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-zipi-50 to-amber-100 py-8">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-zipi-bg px-4 py-8">
+      <div className="w-full max-w-sm">
+        {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-zipi-500 rounded-2xl mb-4">
-            <span className="text-white font-bold text-3xl">Z</span>
+          <div
+            className="inline-flex items-center justify-center w-[68px] h-[68px] rounded-[20px] mb-4"
+            style={{ background: 'linear-gradient(135deg,#EF9008,#D46A04)' }}
+          >
+            <span className="text-white font-extrabold text-[28px]">Z</span>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Creá tu cuenta</h1>
+          <h1 className="text-[28px] font-extrabold text-zipi-ink tracking-tight">Creá tu cuenta</h1>
+          <p className="text-[14px] text-zipi-muted mt-1">Gratis y en menos de 1 minuto</p>
         </div>
 
-        <div className="card">
+        {/* Card */}
+        <div className="bg-white border border-zipi-rim rounded-[26px] p-6 shadow-zipi">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">
+            <div
+              className="rounded-[13px] px-4 py-3 mb-4 text-[13.5px] font-medium"
+              style={{ background: 'rgba(224,62,99,0.1)', color: '#E03E63' }}
+            >
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3.5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nombre completo</label>
+              <label className="block text-[12.5px] font-bold text-zipi-ink mb-1.5">Nombre completo</label>
               <input
                 className="input"
                 placeholder="Juan Pérez"
@@ -63,7 +72,7 @@ export default function RegisterPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label className="block text-[12.5px] font-bold text-zipi-ink mb-1.5">Email</label>
               <input
                 type="email"
                 className="input"
@@ -74,7 +83,7 @@ export default function RegisterPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+              <label className="block text-[12.5px] font-bold text-zipi-ink mb-1.5">Teléfono</label>
               <input
                 className="input"
                 placeholder="+541111111111"
@@ -84,7 +93,7 @@ export default function RegisterPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+              <label className="block text-[12.5px] font-bold text-zipi-ink mb-1.5">Contraseña</label>
               <input
                 type="password"
                 className="input"
@@ -96,7 +105,7 @@ export default function RegisterPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de cuenta</label>
+              <label className="block text-[12.5px] font-bold text-zipi-ink mb-1.5">Tipo de cuenta</label>
               <select
                 className="input"
                 value={form.role}
@@ -107,8 +116,9 @@ export default function RegisterPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Código de referido <span className="text-gray-400 font-normal">(opcional)</span>
+              <label className="block text-[12.5px] font-bold text-zipi-ink mb-1.5">
+                Código de referido{' '}
+                <span className="text-zipi-faint font-normal">(opcional)</span>
               </label>
               <input
                 className="input"
@@ -117,17 +127,24 @@ export default function RegisterPage() {
                 onChange={(e) => setForm({ ...form, referralCode: e.target.value.toUpperCase() })}
               />
               {form.referralCode && (
-                <p className="text-xs text-green-600 mt-1">🎁 Ambos recibirán créditos al completar el registro</p>
+                <p className="text-[12px] mt-1.5 font-medium" style={{ color: '#0E9E6E' }}>
+                  Ambos recibirán créditos al completar el registro
+                </p>
               )}
             </div>
-            <button type="submit" disabled={loading} className="btn-primary w-full mt-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="h-[54px] w-full rounded-2xl font-bold text-white transition-opacity disabled:opacity-50 mt-1"
+              style={{ background: '#1A1714' }}
+            >
               {loading ? 'Creando cuenta...' : 'Crear cuenta'}
             </button>
           </form>
 
-          <p className="text-center text-sm text-gray-500 mt-4">
+          <p className="text-center text-[13.5px] text-zipi-muted mt-4">
             ¿Ya tenés cuenta?{' '}
-            <Link to="/login" className="text-zipi-600 font-medium hover:underline">
+            <Link to="/login" className="text-zipi-500 font-bold hover:underline">
               Iniciá sesión
             </Link>
           </p>
