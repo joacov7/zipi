@@ -2,7 +2,31 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { useAuthStore } from '../../stores/auth.store';
-import { MapPin, Clock, Users, Phone, Check, X, ArrowLeft, Trash2 } from 'lucide-react';
+import { Calendar, Users, Phone, Check, X, ArrowLeft, Trash2 } from 'lucide-react';
+
+function Avatar({ name, size = 32 }: { name: string; size?: number }) {
+  return (
+    <div
+      style={{ width: size, height: size, fontSize: Math.round(size * 0.38) }}
+      className="rounded-full bg-zipi-500/15 flex items-center justify-center font-bold text-zipi-500 shrink-0"
+    >
+      {name.charAt(0).toUpperCase()}
+    </div>
+  );
+}
+
+function Stars({ value }: { value?: number }) {
+  const full = Math.round(value ?? 0);
+  return (
+    <span className="flex gap-px">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <span key={i} style={{ fontSize: 12, color: i <= full ? '#EF9008' : '#d4cfc9' }}>
+          ★
+        </span>
+      ))}
+    </span>
+  );
+}
 
 export default function SharedTripDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -31,12 +55,26 @@ export default function SharedTripDetailPage() {
   });
 
   const respondMutation = useMutation({
-    mutationFn: ({ participantUserId, accept }: { participantUserId: string; accept: boolean }) =>
-      api.patch(`/shared-trips/${id}/participants/${participantUserId}/${accept ? 'accept' : 'reject'}`),
+    mutationFn: ({
+      participantUserId,
+      accept,
+    }: {
+      participantUserId: string;
+      accept: boolean;
+    }) =>
+      api.patch(
+        `/shared-trips/${id}/participants/${participantUserId}/${accept ? 'accept' : 'reject'}`,
+      ),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['shared-trip', id] }),
   });
 
-  if (isLoading) return <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-zipi-500" /></div>;
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-20">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-zipi-ink" />
+      </div>
+    );
+  }
   if (!trip) return null;
 
   const isPublisher = trip.publisher.id === user?.id;
@@ -46,143 +84,201 @@ export default function SharedTripDetailPage() {
   const seatsLeft = trip.totalSeats - confirmed.length;
   const isCancelled = trip.status === 'CANCELLED';
 
-  const statusColors: Record<string, string> = {
-    OPEN: 'bg-green-100 text-green-700',
-    FULL: 'bg-blue-100 text-blue-700',
-    DEPARTED: 'bg-gray-100 text-gray-700',
-    CANCELLED: 'bg-red-100 text-red-700',
+  const role = isPublisher
+    ? 'publisher'
+    : myParticipant?.status === 'CONFIRMED'
+    ? 'confirmed'
+    : myParticipant?.status === 'PENDING'
+    ? 'pending'
+    : 'none';
+
+  const statusMap: Record<string, { label: string; bg: string; fg: string }> = {
+    OPEN: { label: 'Abierto', bg: 'rgba(14,158,110,0.14)', fg: '#0E9E6E' },
+    FULL: { label: 'Completo', bg: 'rgba(47,107,236,0.14)', fg: '#2F6BEC' },
+    DEPARTED: { label: 'Partió', bg: 'rgba(107,103,96,0.14)', fg: '#6b6760' },
+    CANCELLED: { label: 'Cancelado', bg: 'rgba(224,62,99,0.12)', fg: '#E03E63' },
   };
-  const statusLabels: Record<string, string> = {
-    OPEN: 'Abierto', FULL: 'Completo', DEPARTED: 'Partió', CANCELLED: 'Cancelado',
-  };
+  const st = statusMap[trip.status] || statusMap.OPEN;
+
+  const whenFull = new Date(trip.departureTime).toLocaleString('es-AR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <button onClick={() => navigate('/shared-trips')} className="flex items-center gap-2 text-gray-500 hover:text-gray-800">
-        <ArrowLeft size={18} /> Volver
+    <div className="max-w-2xl mx-auto pb-32">
+      {/* Back */}
+      <button
+        onClick={() => navigate('/shared-trips')}
+        className="flex items-center gap-2 text-zipi-muted hover:text-zipi-ink text-[14px] font-medium mb-5 -ml-0.5"
+      >
+        <ArrowLeft size={18} />
+        Volver
       </button>
 
-      <div className="card space-y-4">
-        <div className="flex items-start justify-between">
-          <span className={`badge ${statusColors[trip.status]}`}>{statusLabels[trip.status]}</span>
+      {/* Route card */}
+      <div className="bg-white border border-zipi-rim rounded-[22px] p-[18px] mb-3.5 shadow-zipi">
+        <div className="flex items-start justify-between mb-4">
+          <span
+            className="text-[11.5px] font-bold rounded-full px-3 py-[5px]"
+            style={{ background: st.bg, color: st.fg }}
+          >
+            {st.label}
+          </span>
           {!isCancelled && isPublisher && (
-            <button onClick={() => confirm('¿Cancelar el viaje?') && cancelMutation.mutate()} className="text-red-500 hover:text-red-700 flex items-center gap-1 text-sm">
-              <Trash2 size={14} /> Cancelar viaje
+            <button
+              onClick={() =>
+                window.confirm('¿Cancelar el viaje?') && cancelMutation.mutate()
+              }
+              className="flex items-center gap-1.5 text-[13px] text-red-500 hover:text-red-700"
+            >
+              <Trash2 size={14} />
+              Cancelar viaje
             </button>
           )}
         </div>
 
-        <div className="space-y-2">
-          <div className="flex items-start gap-3">
-            <div className="w-7 h-7 bg-green-100 rounded-full flex items-center justify-center shrink-0 mt-0.5">
-              <MapPin size={13} className="text-green-600" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-400">Desde</p>
-              <p className="font-medium text-gray-900">{trip.originAddress}</p>
-            </div>
+        {/* Route connector */}
+        <div className="flex gap-3.5">
+          <div className="flex flex-col items-center pt-[5px] shrink-0">
+            <span className="w-[11px] h-[11px] rounded-full border-[2.5px] border-zipi-ink" />
+            <span className="w-0.5 bg-zipi-rim flex-1 my-[5px] min-h-7" />
+            <span className="w-[11px] h-[11px] rounded-[2px] bg-zipi-500" />
           </div>
-          <div className="flex items-start gap-3">
-            <div className="w-7 h-7 bg-red-100 rounded-full flex items-center justify-center shrink-0 mt-0.5">
-              <MapPin size={13} className="text-red-600" />
+          <div className="flex-1">
+            <div className="mb-4">
+              <p className="text-[11.5px] font-semibold text-zipi-faint mb-0.5">Desde</p>
+              <p className="text-[15px] font-bold text-zipi-ink">{trip.originAddress}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-400">Hasta</p>
-              <p className="font-medium text-gray-900">{trip.destAddress}</p>
+              <p className="text-[11.5px] font-semibold text-zipi-faint mb-0.5">Hasta</p>
+              <p className="text-[15px] font-bold text-zipi-ink">{trip.destAddress}</p>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-6 pt-2 border-t border-gray-100 text-sm text-gray-600">
-          <div className="flex items-center gap-2">
-            <Clock size={14} />
-            <span>{new Date(trip.departureTime).toLocaleString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Users size={14} />
-            <span>{seatsLeft} asiento{seatsLeft !== 1 ? 's' : ''} libre{seatsLeft !== 1 ? 's' : ''}</span>
-          </div>
+        {/* Meta */}
+        <div className="flex items-center gap-[18px] mt-4 pt-3.5 border-t border-zipi-rim text-[13px] text-zipi-muted">
+          <span className="flex items-center gap-1.5">
+            <Calendar size={16} className="opacity-60" />
+            {whenFull}
+          </span>
+          <span className="flex items-center gap-1.5 shrink-0">
+            <Users size={16} className="opacity-60" />
+            {seatsLeft} libre{seatsLeft !== 1 ? 's' : ''}
+          </span>
         </div>
 
         {trip.description && (
-          <p className="text-sm text-gray-500 bg-gray-50 rounded-xl px-4 py-3">{trip.description}</p>
+          <div className="mt-3.5 text-[13.5px] text-zipi-muted bg-zipi-surface2 rounded-xl px-3.5 py-3 leading-relaxed">
+            {trip.description}
+          </div>
         )}
       </div>
 
       {/* Price */}
-      <div className="card flex items-center justify-between">
+      <div className="bg-white border border-zipi-rim rounded-[22px] p-[18px] mb-3.5 shadow-zipi flex items-center justify-between">
         <div>
-          <p className="text-sm text-gray-500">Costo por asiento</p>
-          <p className="text-3xl font-bold text-zipi-600 mt-1">${trip.costPerSeat.toLocaleString('es-AR')}</p>
+          <p className="text-[12.5px] text-zipi-muted mb-1">Costo por asiento</p>
+          <p className="text-[30px] font-extrabold text-zipi-500 leading-none tracking-tight">
+            ${trip.costPerSeat.toLocaleString('es-AR')}
+          </p>
         </div>
-        <div className="text-right text-sm text-gray-400">
+        <div className="text-right text-[12.5px] text-zipi-faint">
           <p>{trip.totalSeats} asientos</p>
           <p>${(trip.costPerSeat * trip.totalSeats).toLocaleString('es-AR')} total</p>
         </div>
       </div>
 
       {/* Publisher */}
-      <div className="card">
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Publicado por</p>
+      <div className="bg-white border border-zipi-rim rounded-[22px] p-4 mb-3.5 shadow-zipi">
+        <p className="text-[11px] font-bold text-zipi-faint uppercase tracking-widest mb-3">
+          Publicado por
+        </p>
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-zipi-100 rounded-full flex items-center justify-center">
-            <span className="text-lg font-bold text-zipi-600">{trip.publisher.name.charAt(0)}</span>
-          </div>
+          <Avatar name={trip.publisher.name} size={46} />
           <div className="flex-1">
-            <p className="font-semibold text-gray-900">{trip.publisher.name}</p>
+            <p className="text-[15px] font-bold text-zipi-ink">{trip.publisher.name}</p>
+            {trip.publisher.rating != null && (
+              <div className="flex items-center gap-1.5 mt-1">
+                <Stars value={trip.publisher.rating} />
+                <span className="text-[12.5px] text-zipi-muted">{trip.publisher.rating}</span>
+              </div>
+            )}
           </div>
-          <a href={`tel:${trip.publisher.phone}`} className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center hover:bg-green-200">
-            <Phone size={16} className="text-green-600" />
-          </a>
+          {trip.publisher.phone && (
+            <a
+              href={`tel:${trip.publisher.phone}`}
+              className="w-11 h-11 rounded-full flex items-center justify-center hover:opacity-80 transition-opacity"
+              style={{ background: 'rgba(239,144,8,0.12)', color: '#ef9008' }}
+            >
+              <Phone size={19} />
+            </a>
+          )}
         </div>
       </div>
 
-      {/* Participants (confirmed) */}
+      {/* Confirmed passengers */}
       {confirmed.length > 0 && (
-        <div className="card">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+        <div className="bg-white border border-zipi-rim rounded-[22px] p-4 mb-3.5 shadow-zipi">
+          <p className="text-[11px] font-bold text-zipi-faint uppercase tracking-widest mb-3">
             Pasajeros confirmados ({confirmed.length}/{trip.totalSeats})
           </p>
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2.5">
             {confirmed.map((p: any) => (
-              <div key={p.id} className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-xs font-bold text-green-700">
-                  {p.user.name.charAt(0)}
-                </div>
-                <span className="text-sm font-medium text-gray-900">{p.user.name}</span>
-                <Check size={14} className="text-green-500 ml-auto" />
+              <div key={p.id} className="flex items-center gap-2.5">
+                <Avatar name={p.user.name} size={32} />
+                <span className="flex-1 text-[14px] font-semibold text-zipi-ink">
+                  {p.user.name}
+                </span>
+                <Check size={17} strokeWidth={2.6} style={{ color: '#0E9E6E' }} />
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Pending requests (only publisher sees) */}
+      {/* Pending requests (publisher only) */}
       {isPublisher && pending.length > 0 && (
-        <div className="card border-amber-200">
-          <p className="text-xs font-semibold text-amber-600 uppercase tracking-wide mb-3">
+        <div
+          className="bg-white rounded-[22px] p-4 mb-3.5 shadow-zipi"
+          style={{ border: '1px solid rgba(245,166,35,0.4)' }}
+        >
+          <p
+            className="text-[11px] font-bold uppercase tracking-widest mb-3"
+            style={{ color: '#C77A00' }}
+          >
             Solicitudes pendientes ({pending.length})
           </p>
-          <div className="space-y-3">
+          <div className="flex flex-col gap-3">
             {pending.map((p: any) => (
-              <div key={p.id} className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-xs font-bold text-gray-600">
-                  {p.user.name.charAt(0)}
-                </div>
-                <span className="text-sm font-medium text-gray-900 flex-1">{p.user.name}</span>
+              <div key={p.id} className="flex items-center gap-2.5">
+                <Avatar name={p.user.name} size={32} />
+                <span className="flex-1 text-[14px] font-semibold text-zipi-ink">
+                  {p.user.name}
+                </span>
                 <button
-                  onClick={() => respondMutation.mutate({ participantUserId: p.userId, accept: true })}
+                  onClick={() =>
+                    respondMutation.mutate({ participantUserId: p.userId, accept: true })
+                  }
                   disabled={seatsLeft === 0 || respondMutation.isPending}
-                  className="w-8 h-8 bg-green-100 hover:bg-green-200 rounded-full flex items-center justify-center disabled:opacity-40"
+                  className="w-9 h-9 rounded-full flex items-center justify-center hover:opacity-80 transition-opacity disabled:opacity-40"
+                  style={{ background: 'rgba(14,158,110,0.14)', color: '#0E9E6E' }}
                 >
-                  <Check size={14} className="text-green-600" />
+                  <Check size={17} strokeWidth={2.6} />
                 </button>
                 <button
-                  onClick={() => respondMutation.mutate({ participantUserId: p.userId, accept: false })}
+                  onClick={() =>
+                    respondMutation.mutate({ participantUserId: p.userId, accept: false })
+                  }
                   disabled={respondMutation.isPending}
-                  className="w-8 h-8 bg-red-100 hover:bg-red-200 rounded-full flex items-center justify-center"
+                  className="w-9 h-9 rounded-full flex items-center justify-center hover:opacity-80 transition-opacity"
+                  style={{ background: 'rgba(224,62,99,0.12)', color: '#E03E63' }}
                 >
-                  <X size={14} className="text-red-600" />
+                  <X size={16} strokeWidth={2.4} />
                 </button>
               </div>
             ))}
@@ -190,38 +286,65 @@ export default function SharedTripDetailPage() {
         </div>
       )}
 
-      {/* Action buttons */}
-      {!isCancelled && !isPublisher && (
-        <div>
-          {!myParticipant && seatsLeft > 0 && (
-            <button onClick={() => joinMutation.mutate()} disabled={joinMutation.isPending} className="btn-primary w-full">
-              {joinMutation.isPending ? 'Enviando solicitud...' : 'Solicitar lugar — $' + trip.costPerSeat.toLocaleString('es-AR')}
+      {/* Sticky CTA */}
+      {!isCancelled && (
+        <div className="sticky bottom-0 bg-white border-t border-zipi-rim pt-4 pb-6 mt-4">
+          {role === 'none' && trip.status === 'OPEN' && (
+            <button
+              onClick={() => joinMutation.mutate()}
+              disabled={joinMutation.isPending}
+              className="h-[54px] w-full rounded-2xl font-bold text-white bg-zipi-ink hover:opacity-90 transition-opacity disabled:opacity-50"
+            >
+              {joinMutation.isPending
+                ? 'Enviando solicitud...'
+                : `Solicitar lugar · $${trip.costPerSeat.toLocaleString('es-AR')}`}
             </button>
           )}
-          {myParticipant?.status === 'PENDING' && (
-            <div className="space-y-2">
-              <div className="bg-amber-50 border border-amber-200 text-amber-700 rounded-xl px-4 py-3 text-sm text-center">
-                Solicitud enviada — esperando confirmación del conductor
+          {role === 'none' && trip.status === 'FULL' && (
+            <div className="text-center text-[13.5px] font-semibold text-zipi-muted bg-zipi-surface2 rounded-[14px] py-4">
+              Viaje completo — sin asientos disponibles
+            </div>
+          )}
+          {role === 'pending' && (
+            <div className="flex flex-col gap-2.5">
+              <div
+                className="text-center text-[13px] font-semibold rounded-[13px] py-3"
+                style={{ color: '#C77A00', background: 'rgba(245,166,35,0.14)' }}
+              >
+                Solicitud enviada — esperando confirmación
               </div>
-              <button onClick={() => leaveMutation.mutate()} className="btn-secondary w-full text-sm">
+              <button
+                onClick={() => leaveMutation.mutate()}
+                disabled={leaveMutation.isPending}
+                className="h-[54px] w-full rounded-2xl font-bold text-zipi-muted border border-zipi-rim hover:bg-zipi-surface2 transition-colors"
+              >
                 Cancelar solicitud
               </button>
             </div>
           )}
-          {myParticipant?.status === 'CONFIRMED' && (
-            <div className="space-y-2">
-              <div className="bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 text-sm text-center font-medium">
-                ✓ Tu lugar está confirmado
+          {role === 'confirmed' && (
+            <div className="flex flex-col gap-2.5">
+              <div
+                className="flex items-center justify-center gap-2 text-[13.5px] font-bold rounded-[13px] py-3.5"
+                style={{ color: '#0E9E6E', background: 'rgba(14,158,110,0.12)' }}
+              >
+                <Check size={17} strokeWidth={2.6} />
+                Tu lugar está confirmado
               </div>
-              <button onClick={() => confirm('¿Abandonar este viaje?') && leaveMutation.mutate()} className="btn-secondary w-full text-sm text-red-600">
+              <button
+                onClick={() =>
+                  window.confirm('¿Abandonar este viaje?') && leaveMutation.mutate()
+                }
+                className="h-[54px] w-full rounded-2xl font-bold text-zipi-muted border border-zipi-rim hover:bg-zipi-surface2 transition-colors"
+              >
                 Abandonar viaje
               </button>
             </div>
           )}
-          {trip.status === 'FULL' && !myParticipant && (
-            <div className="bg-gray-100 text-gray-500 rounded-xl px-4 py-3 text-sm text-center">
-              Viaje completo — no hay asientos disponibles
-            </div>
+          {role === 'publisher' && (
+            <button className="h-[54px] w-full rounded-2xl font-bold text-zipi-600 bg-zipi-500/10 hover:bg-zipi-500/20 transition-colors">
+              Gestionar mi viaje
+            </button>
           )}
         </div>
       )}
