@@ -7,7 +7,6 @@ import { SocketEvent } from '@zipi/shared';
 import { Phone, Star, MapPin, Car, Clock, AlertTriangle, ShieldAlert, Receipt } from 'lucide-react';
 import TripChat from '../../components/chat/TripChat';
 import { CANCELLATION_FEE_AFTER_ACCEPT } from '@zipi/shared';
-import { useState } from 'react';
 
 const TripMap = lazy(() => import('../../components/map/TripMap'));
 
