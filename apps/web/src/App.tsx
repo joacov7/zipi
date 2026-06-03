@@ -32,6 +32,7 @@ import ContractorProfile from './pages/contractor/ContractorProfile';
 import WalletPage from './pages/passenger/WalletPage';
 import ReferralPage from './pages/passenger/ReferralPage';
 import InvoicePage from './pages/passenger/InvoicePage';
+import ProfilePage from './pages/passenger/ProfilePage';
 
 // Admin
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -148,6 +149,14 @@ export default function App() {
         }
       />
       <Route path="/invoice/:id" element={<PrivateRoute roles={[UserRole.PASSENGER]}><InvoicePage /></PrivateRoute>} />
+      <Route
+        path="/profile"
+        element={
+          <PrivateRoute roles={[UserRole.PASSENGER]}>
+            <Layout><ProfilePage /></Layout>
+          </PrivateRoute>
+        }
+      />
 
       {/* Services (passenger + contractor) */}
       <Route

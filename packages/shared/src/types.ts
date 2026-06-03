@@ -27,6 +27,9 @@ export interface UserPublic {
   phone: string;
   role: UserRole;
   avatarUrl?: string;
+  referralCode?: string;
+  walletBalance?: number;
+  cuit?: string;
   createdAt: string;
 }
 

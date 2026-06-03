@@ -62,6 +62,7 @@ function getNavItems(role: string): NavItem[] {
     { to: '/history', label: 'Historial', icon: <History size={20} /> },
     { to: '/wallet', label: 'Billetera', icon: <Wallet size={20} /> },
     { to: '/referral', label: 'Referir amigos', icon: <Gift size={20} /> },
+    { to: '/profile', label: 'Mi perfil', icon: <User size={20} /> },
   ];
 }
 
@@ -127,6 +128,11 @@ export default function Layout({ children }: { children: ReactNode }) {
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900 truncate">{user?.name}</p>
               <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+              {user?.role === 'PASSENGER' && (user?.walletBalance ?? 0) > 0 && (
+                <p className="text-xs text-green-600 font-medium mt-0.5">
+                  💰 ${(user.walletBalance ?? 0).toLocaleString('es-AR')} en créditos
+                </p>
+              )}
             </div>
           </div>
           <button

@@ -13,6 +13,7 @@ export default function RegisterPage() {
     phone: '',
     password: '',
     role: UserRole.PASSENGER,
+    referralCode: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,7 +23,8 @@ export default function RegisterPage() {
     setError('');
     setLoading(true);
     try {
-      const { data } = await api.post('/auth/register', form);
+      const payload = { ...form, referralCode: form.referralCode.trim() || undefined };
+      const { data } = await api.post('/auth/register', payload);
       setAuth(data.user, data.accessToken, data.refreshToken);
       navigate('/');
     } catch (err: any) {
@@ -103,6 +105,20 @@ export default function RegisterPage() {
                 <option value={UserRole.PASSENGER}>Pasajero / Cliente</option>
                 <option value={UserRole.DRIVER}>Conductor</option>
               </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Código de referido <span className="text-gray-400 font-normal">(opcional)</span>
+              </label>
+              <input
+                className="input"
+                placeholder="Ej: JUAN4X2F"
+                value={form.referralCode}
+                onChange={(e) => setForm({ ...form, referralCode: e.target.value.toUpperCase() })}
+              />
+              {form.referralCode && (
+                <p className="text-xs text-green-600 mt-1">🎁 Ambos recibirán créditos al completar el registro</p>
+              )}
             </div>
             <button type="submit" disabled={loading} className="btn-primary w-full mt-2">
               {loading ? 'Creando cuenta...' : 'Crear cuenta'}

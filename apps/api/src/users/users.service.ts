@@ -10,6 +10,9 @@ const USER_SELECT = {
   role: true,
   avatarUrl: true,
   isActive: true,
+  referralCode: true,
+  walletBalance: true,
+  cuit: true,
   createdAt: true,
 } as const;
 
