@@ -144,6 +144,7 @@ export class TripsController {
         discountCode: trip.discountCode,
         discountAmount: trip.discountAmount,
         surgeMultiplier: trip.surgeMultiplier,
+        walletCreditsUsed: (trip as any).walletCreditsUsed ?? 0,
       },
     };
   }

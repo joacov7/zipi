@@ -5,10 +5,11 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { ChatModule } from '../chat/chat.module';
 import { ZonesModule } from '../zones/zones.module';
 import { DiscountsModule } from '../discounts/discounts.module';
+import { WalletModule } from '../wallet/wallet.module';
 import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
-  imports: [NotificationsModule, ChatModule, ZonesModule, DiscountsModule, PrismaModule],
+  imports: [NotificationsModule, ChatModule, ZonesModule, DiscountsModule, WalletModule, PrismaModule],
   providers: [TripsService],
   controllers: [TripsController],
   exports: [TripsService],

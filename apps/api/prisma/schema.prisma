@@ -151,8 +151,9 @@ model Trip {
   cancellationFee Float?
   discountCode    String?
   discountAmount  Float?
-  surgeMultiplier Float     @default(1.0)
-  createdAt       DateTime   @default(now())
+  surgeMultiplier   Float    @default(1.0)
+  walletCreditsUsed Float    @default(0)
+  createdAt         DateTime @default(now())
   updatedAt       DateTime   @updatedAt
 
   messages        TripMessage[]

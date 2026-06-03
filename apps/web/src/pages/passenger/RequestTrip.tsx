@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
-import { MapPin, Navigation, Clock, Tag, Zap, X } from 'lucide-react';
+import { MapPin, Navigation, Clock, Tag, Zap, X, Wallet } from 'lucide-react';
 import { DEFAULT_MAP_CENTER } from '@zipi/shared';
 import AddressInput from '../../components/ui/AddressInput';
+import { useAuthStore } from '../../stores/auth.store';
 
 interface Estimate {
   estimatedPrice: number;
@@ -27,6 +28,7 @@ const QUICK_DESTINATIONS = [
 
 export default function RequestTrip() {
   const navigate = useNavigate();
+  const { user, setAuth, accessToken, refreshToken } = useAuthStore();
   const [step, setStep] = useState<'form' | 'confirm'>('form');
   const [loading, setLoading] = useState(false);
   const [estimate, setEstimate] = useState<Estimate | null>(null);
@@ -34,6 +36,7 @@ export default function RequestTrip() {
   const [discount, setDiscount] = useState<DiscountResult | null>(null);
   const [discountError, setDiscountError] = useState('');
   const [discountLoading, setDiscountLoading] = useState(false);
+  const [useCredits, setUseCredits] = useState(false);
   const [form, setForm] = useState({
     originAddress: '',
     originLat: DEFAULT_MAP_CENTER.lat,
@@ -97,7 +100,12 @@ export default function RequestTrip() {
         destLng: form.destLng || DEFAULT_MAP_CENTER.lng - 0.05,
         destAddress: form.destAddress,
         discountCode: discount ? discountCode.trim().toUpperCase() : undefined,
+        useWalletCredits: useCredits,
       });
+      // Update wallet balance optimistically in store
+      if (useCredits && user && creditsToApply > 0 && accessToken && refreshToken) {
+        setAuth({ ...user, walletBalance: (user.walletBalance ?? 0) - creditsToApply }, accessToken, refreshToken);
+      }
       navigate(`/trip/${data.id}`);
     } catch (err: any) {
       alert(err.response?.data?.message || 'Error al solicitar viaje');
@@ -106,8 +114,12 @@ export default function RequestTrip() {
     }
   };
 
+  const afterDiscount = (estimate?.estimatedPrice ?? 0) - (discount?.discountAmount ?? 0);
+  const walletBalance = user?.walletBalance ?? 0;
+  const creditsToApply = useCredits ? Math.min(walletBalance, afterDiscount) : 0;
+  const finalPrice = Math.max(0, afterDiscount - creditsToApply);
+
   if (step === 'confirm' && estimate) {
-    const finalPrice = estimate.estimatedPrice - (discount?.discountAmount ?? 0);
 
     return (
       <div className="max-w-lg mx-auto space-y-6">
@@ -175,16 +187,54 @@ export default function RequestTrip() {
                 <span>-${discount.discountAmount.toLocaleString('es-AR')}</span>
               </div>
             )}
+            {creditsToApply > 0 && (
+              <div className="flex justify-between text-zipi-600">
+                <span>Créditos billetera</span>
+                <span>-${creditsToApply.toLocaleString('es-AR')}</span>
+              </div>
+            )}
             <div className="flex justify-between font-bold text-gray-900 pt-2 border-t border-gray-100 text-base">
               <span>Total estimado</span>
               <span className="text-zipi-600">${finalPrice.toLocaleString('es-AR')}</span>
             </div>
+            {creditsToApply > 0 && finalPrice === 0 && (
+              <p className="text-xs text-zipi-500 text-center mt-1">¡Viaje cubierto completamente con créditos!</p>
+            )}
           </div>
           <div className="flex items-center gap-2 mt-3 text-sm text-gray-500">
             <Clock size={14} />
             <span>Tiempo estimado: {estimate.estimatedMinutes} minutos</span>
           </div>
         </div>
+
+        {/* Wallet credits */}
+        {walletBalance > 0 && (
+          <div className="card">
+            <button
+              onClick={() => setUseCredits((v) => !v)}
+              className={`w-full flex items-center justify-between gap-3 transition-colors ${useCredits ? 'text-zipi-700' : 'text-gray-700'}`}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${useCredits ? 'bg-zipi-100' : 'bg-gray-100'}`}>
+                  <Wallet size={18} className={useCredits ? 'text-zipi-600' : 'text-gray-500'} />
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-semibold">Usar créditos de billetera</p>
+                  <p className="text-xs text-gray-500">Tenés ${walletBalance.toLocaleString('es-AR')} disponibles</p>
+                </div>
+              </div>
+              <div className={`w-10 h-6 rounded-full transition-colors relative ${useCredits ? 'bg-zipi-500' : 'bg-gray-300'}`}>
+                <span className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${useCredits ? 'translate-x-5' : 'translate-x-1'}`} />
+              </div>
+            </button>
+            {useCredits && (
+              <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between text-sm">
+                <span className="text-zipi-600 font-medium">Créditos a usar</span>
+                <span className="font-semibold text-zipi-600">-${creditsToApply.toLocaleString('es-AR')}</span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Discount code */}
         <div className="card">

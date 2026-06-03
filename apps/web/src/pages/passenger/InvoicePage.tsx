@@ -111,6 +111,12 @@ export default function InvoicePage() {
                   <td className="py-2 text-right text-green-600">-${inv.pricing.discountAmount.toLocaleString('es-AR')}</td>
                 </tr>
               )}
+              {inv.pricing.walletCreditsUsed > 0 && (
+                <tr className="border-b border-gray-50">
+                  <td className="py-2 text-zipi-600">Créditos de billetera</td>
+                  <td className="py-2 text-right text-zipi-600">-${inv.pricing.walletCreditsUsed.toLocaleString('es-AR')}</td>
+                </tr>
+              )}
             </tbody>
             <tfoot>
               <tr className="border-t-2 border-gray-300">

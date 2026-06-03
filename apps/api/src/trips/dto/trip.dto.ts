@@ -1,4 +1,4 @@
-import { IsNumber, IsString, IsOptional, IsEnum, IsInt, Min, Max, IsBoolean } from 'class-validator';
+import { IsNumber, IsString, IsOptional, IsEnum, IsInt, Min, Max, IsBoolean, IsNotEmpty } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { TripStatus } from '@prisma/client';
 
@@ -31,6 +31,11 @@ export class CreateTripDto {
   @IsString()
   @IsOptional()
   discountCode?: string;
+
+  @ApiPropertyOptional()
+  @IsBoolean()
+  @IsOptional()
+  useWalletCredits?: boolean;
 }
 
 export class UpdateTripStatusDto {

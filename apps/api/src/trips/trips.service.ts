@@ -4,11 +4,12 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
-import { TripStatus } from '@prisma/client';
+import { TripStatus, WalletTransactionType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { ZonesService } from '../zones/zones.service';
 import { DiscountsService } from '../discounts/discounts.service';
+import { WalletService } from '../wallet/wallet.service';
 import { CreateTripDto, UpdateTripStatusDto, RateTripDto, EstimatePriceDto } from './dto/trip.dto';
 import { PRICING, SURGE_SCHEDULE, CANCELLATION_FEE_AFTER_ACCEPT } from '@zipi/shared';
 
@@ -19,6 +20,7 @@ export class TripsService {
     private notifications: NotificationsService,
     private zones: ZonesService,
     private discounts: DiscountsService,
+    private wallet: WalletService,
   ) {}
 
   getSurgeMultiplier(): { multiplier: number; label: string | null } {
@@ -79,7 +81,14 @@ export class TripsService {
 
     const finalEstimatedPrice = Math.max(0, estimate.estimatedPrice - discountAmount);
 
-    return this.prisma.trip.create({
+    // Determine wallet credits to apply
+    let walletCreditsUsed = 0;
+    if (dto.useWalletCredits) {
+      const { balance } = await this.wallet.getBalance(passengerId);
+      walletCreditsUsed = Math.min(balance, finalEstimatedPrice);
+    }
+
+    const trip = await this.prisma.trip.create({
       data: {
         passengerId,
         originLat: dto.originLat,
@@ -94,11 +103,23 @@ export class TripsService {
         surgeMultiplier: estimate.surgeMultiplier,
         discountCode: appliedCode,
         discountAmount: discountAmount > 0 ? discountAmount : undefined,
+        walletCreditsUsed,
       },
       include: {
         passenger: { select: { id: true, name: true, phone: true, avatarUrl: true } },
       },
     });
+
+    if (walletCreditsUsed > 0) {
+      await this.wallet.debit(
+        passengerId,
+        walletCreditsUsed,
+        `Créditos viaje ${trip.id.slice(-6).toUpperCase()}`,
+        trip.id,
+      );
+    }
+
+    return trip;
   }
 
   async findById(id: string) {
@@ -171,9 +192,18 @@ export class TripsService {
 
     if (dto.status === TripStatus.CANCELLED) {
       updateData.cancelledBy = userId;
-      // Charge passenger if they cancel after driver accepted
       if (trip.status === TripStatus.ACCEPTED && isPassenger) {
         updateData.cancellationFee = CANCELLATION_FEE_AFTER_ACCEPT;
+      }
+      // Refund wallet credits on cancellation
+      if ((trip as any).walletCreditsUsed > 0) {
+        await this.wallet.credit(
+          trip.passengerId,
+          (trip as any).walletCreditsUsed,
+          WalletTransactionType.CREDIT,
+          `Reembolso viaje cancelado ${tripId.slice(-6).toUpperCase()}`,
+          tripId,
+        );
       }
     }
 
