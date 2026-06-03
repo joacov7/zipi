@@ -76,6 +76,7 @@ export default function DriverHome() {
 
   const isTruckDriver = profile?.vehicleType === VehicleType.TRUCK || profile?.vehicleType === VehicleType.HEAVY_MACHINERY;
 
+  // Socket: listen for new requests
   useEffect(() => {
     const socket = getSocket();
     socket.on(SocketEvent.TRIP_REQUEST, () => {
@@ -89,6 +90,25 @@ export default function DriverHome() {
       socket.off(SocketEvent.DELIVERY_REQUEST);
     };
   }, [queryClient]);
+
+  // GPS tracking: emit location while available
+  useEffect(() => {
+    if (!profile?.isAvailable || !profile?.id || !navigator.geolocation) return;
+    const socket = getSocket();
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        socket.emit(SocketEvent.DRIVER_LOCATION_UPDATE, {
+          driverId: profile.id,
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          heading: pos.coords.heading ?? undefined,
+        });
+      },
+      null,
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 },
+    );
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, [profile?.isAvailable, profile?.id]);
 
   if (!profile) {
     return (

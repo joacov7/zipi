@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
-import { MapPin, Navigation, Clock, Tag, Zap, X, Wallet } from 'lucide-react';
+import { MapPin, Navigation, Clock, Tag, Zap, X, Wallet, Locate } from 'lucide-react';
 import { DEFAULT_MAP_CENTER } from '@zipi/shared';
 import AddressInput from '../../components/ui/AddressInput';
 import { useAuthStore } from '../../stores/auth.store';
@@ -37,6 +37,7 @@ export default function RequestTrip() {
   const [discountError, setDiscountError] = useState('');
   const [discountLoading, setDiscountLoading] = useState(false);
   const [useCredits, setUseCredits] = useState(false);
+  const [locating, setLocating] = useState(false);
   const [form, setForm] = useState({
     originAddress: '',
     originLat: DEFAULT_MAP_CENTER.lat,
@@ -45,6 +46,24 @@ export default function RequestTrip() {
     destLat: 0,
     destLng: 0,
   });
+
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setForm((f) => ({
+          ...f,
+          originLat: pos.coords.latitude,
+          originLng: pos.coords.longitude,
+          originAddress: f.originAddress || 'Mi ubicación actual',
+        }));
+        setLocating(false);
+      },
+      () => setLocating(false),
+      { enableHighAccuracy: true, timeout: 8000 },
+    );
+  }, []);
 
   const handleEstimate = async (dest?: (typeof QUICK_DESTINATIONS)[0]) => {
     const destData = dest
@@ -293,15 +312,16 @@ export default function RequestTrip() {
 
       <div className="card space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            <Navigation size={14} className="inline mr-1 text-green-500" />
+          <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+            <Navigation size={14} className="text-green-500" />
             Desde (tu ubicación)
+            {locating && <span className="text-xs text-zipi-500 font-normal ml-1 flex items-center gap-1"><Locate size={12} className="animate-pulse" /> Obteniendo GPS...</span>}
           </label>
           <AddressInput
             value={form.originAddress}
             onChange={(val) => setForm((f) => ({ ...f, originAddress: val }))}
             onSelect={(r) => setForm((f) => ({ ...f, originAddress: r.address, originLat: r.lat, originLng: r.lng }))}
-            placeholder="Tu dirección actual"
+            placeholder={locating ? 'Obteniendo tu ubicación...' : 'Tu dirección actual'}
           />
         </div>
         <div>

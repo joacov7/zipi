@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import * as Location from 'expo-location';
 import { api } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { DEFAULT_MAP_CENTER } from '@zipi/shared';
@@ -27,6 +28,25 @@ export default function RequestTripScreen() {
   const [estimate, setEstimate] = useState<any>(null);
   const [destAddress, setDestAddress] = useState('');
   const [selectedDest, setSelectedDest] = useState<(typeof QUICK_DESTINATIONS)[0] | null>(null);
+  const [origin, setOrigin] = useState({ lat: DEFAULT_MAP_CENTER.lat, lng: DEFAULT_MAP_CENTER.lng, address: 'Mi ubicación' });
+  const [locating, setLocating] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') { setLocating(false); return; }
+        const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+        const [geo] = await Location.reverseGeocodeAsync({ latitude: loc.coords.latitude, longitude: loc.coords.longitude });
+        const address = geo ? `${geo.street ?? ''} ${geo.streetNumber ?? ''}, ${geo.city ?? ''}`.trim().replace(/^,|,$/g, '').trim() : 'Mi ubicación GPS';
+        setOrigin({ lat: loc.coords.latitude, lng: loc.coords.longitude, address });
+      } catch {
+        // keep default
+      } finally {
+        setLocating(false);
+      }
+    })();
+  }, []);
 
   const handleEstimate = async (dest?: (typeof QUICK_DESTINATIONS)[0]) => {
     const address = dest?.label ?? destAddress;
@@ -37,8 +57,8 @@ export default function RequestTripScreen() {
       const destLat = dest?.lat ?? DEFAULT_MAP_CENTER.lat - 0.05;
       const destLng = dest?.lng ?? DEFAULT_MAP_CENTER.lng - 0.05;
       const { data } = await api.post('/trips/estimate', {
-        originLat: DEFAULT_MAP_CENTER.lat,
-        originLng: DEFAULT_MAP_CENTER.lng,
+        originLat: origin.lat,
+        originLng: origin.lng,
         destLat,
         destLng,
       });
@@ -56,9 +76,9 @@ export default function RequestTripScreen() {
     setLoading(true);
     try {
       const { data } = await api.post('/trips', {
-        originLat: DEFAULT_MAP_CENTER.lat,
-        originLng: DEFAULT_MAP_CENTER.lng,
-        originAddress: 'Mi ubicación',
+        originLat: origin.lat,
+        originLng: origin.lng,
+        originAddress: origin.address,
         destLat: estimate.destLat,
         destLng: estimate.destLng,
         destAddress: estimate.destAddress,
@@ -84,7 +104,7 @@ export default function RequestTripScreen() {
             <Ionicons name="navigate" size={20} color="#22c55e" />
             <View style={{ marginLeft: 12 }}>
               <Text style={styles.routeLabel}>Origen</Text>
-              <Text style={styles.routeValue}>Mi ubicación</Text>
+              <Text style={styles.routeValue}>{origin.address}</Text>
             </View>
           </View>
           <View style={[styles.routeRow, { marginTop: 12 }]}>
@@ -133,6 +153,15 @@ export default function RequestTripScreen() {
       </TouchableOpacity>
       <Text style={styles.title}>Pedir un remis</Text>
 
+      {/* Origin GPS indicator */}
+      <View style={styles.originBox}>
+        <Ionicons name={locating ? 'locate' : 'navigate'} size={16} color={locating ? '#ef9008' : '#22c55e'} />
+        <Text style={styles.originText} numberOfLines={1}>
+          {locating ? 'Obteniendo tu ubicación GPS...' : origin.address}
+        </Text>
+        {locating && <ActivityIndicator size="small" color="#ef9008" />}
+      </View>
+
       <View style={styles.card}>
         <Text style={styles.inputLabel}>¿A dónde vas?</Text>
         <TextInput
@@ -171,6 +200,8 @@ export default function RequestTripScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f9fafb' },
   backBtn: { marginBottom: 16 },
+  originBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#f0fdf4', borderRadius: 12, padding: 12, marginBottom: 14 },
+  originText: { flex: 1, fontSize: 13, color: '#374151', fontWeight: '500' },
   title: { fontSize: 24, fontWeight: 'bold', color: '#111827', marginBottom: 20 },
   card: { backgroundColor: '#fff', borderRadius: 20, padding: 20, marginBottom: 16, elevation: 1, shadowOpacity: 0.04 },
   cardTitle: { fontSize: 16, fontWeight: '700', color: '#111827', marginBottom: 12 },

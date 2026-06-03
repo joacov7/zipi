@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   Switch, Alert, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import * as Location from 'expo-location';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../src/services/api';
+import { getSocket } from '../../src/services/socket';
 import { useAuthStore } from '../../src/stores/auth.store';
-import { VehicleType } from '@zipi/shared';
+import { VehicleType, SocketEvent } from '@zipi/shared';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function DriverHomeScreen() {
@@ -74,6 +76,35 @@ export default function DriverHomeScreen() {
   const isTruckDriver =
     profile?.vehicleType === VehicleType.TRUCK ||
     profile?.vehicleType === VehicleType.HEAVY_MACHINERY;
+
+  // GPS tracking while available
+  useEffect(() => {
+    if (!profile?.isAvailable || !profile?.id) return;
+
+    let subscription: Location.LocationSubscription | null = null;
+
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permiso de ubicación requerido', 'Para recibir viajes necesitás activar el GPS.');
+        return;
+      }
+      const socket = getSocket();
+      subscription = await Location.watchPositionAsync(
+        { accuracy: Location.Accuracy.High, timeInterval: 5000, distanceInterval: 10 },
+        (loc) => {
+          socket.emit(SocketEvent.DRIVER_LOCATION_UPDATE, {
+            driverId: profile.id,
+            lat: loc.coords.latitude,
+            lng: loc.coords.longitude,
+            heading: loc.coords.heading ?? undefined,
+          });
+        },
+      );
+    })();
+
+    return () => { subscription?.remove(); };
+  }, [profile?.isAvailable, profile?.id]);
 
   if (profileLoading) {
     return <View style={styles.loading}><ActivityIndicator size="large" color="#ef9008" /></View>;
