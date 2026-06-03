@@ -6,6 +6,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
+import { createHash, randomBytes } from 'crypto';
 import { WalletTransactionType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { WalletService, REFERRAL_BONUS } from '../wallet/wallet.service';
@@ -13,8 +14,12 @@ import { RegisterDto, LoginDto } from './dto/auth.dto';
 
 function generateReferralCode(name: string): string {
   const prefix = name.replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 4).padEnd(4, 'X');
-  const suffix = Math.random().toString(36).toUpperCase().slice(2, 6);
+  const suffix = randomBytes(3).toString('hex').toUpperCase().slice(0, 4);
   return `${prefix}${suffix}`;
+}
+
+function hashToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
 }
 
 @Injectable()
@@ -48,12 +53,14 @@ export class AuthService {
     } while (await this.prisma.user.findUnique({ where: { referralCode } }));
 
     const password = await bcrypt.hash(dto.password, 10);
-    const { referralCode: _, ...restDto } = dto;
 
     const user = await this.prisma.user.create({
       data: {
-        ...restDto,
+        name: dto.name,
+        email: dto.email,
+        phone: dto.phone,
         password,
+        role: 'PASSENGER',
         referralCode,
         referredBy: referrerId,
       },
@@ -83,17 +90,18 @@ export class AuthService {
   }
 
   async refresh(refreshToken: string) {
+    const tokenHash = hashToken(refreshToken);
     const stored = await this.prisma.refreshToken.findUnique({
-      where: { token: refreshToken },
+      where: { token: tokenHash },
       include: { user: true },
     });
 
     if (!stored || stored.expiresAt < new Date()) {
-      await this.prisma.refreshToken.deleteMany({ where: { token: refreshToken } });
+      await this.prisma.refreshToken.deleteMany({ where: { token: tokenHash } });
       throw new UnauthorizedException('Refresh token inválido o expirado');
     }
 
-    await this.prisma.refreshToken.delete({ where: { token: refreshToken } });
+    await this.prisma.refreshToken.delete({ where: { token: tokenHash } });
     return this.generateTokens(stored.user);
   }
 
@@ -117,7 +125,7 @@ export class AuthService {
 
     await this.prisma.refreshToken.create({
       data: {
-        token: refreshToken,
+        token: hashToken(refreshToken),
         userId: user.id,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       },

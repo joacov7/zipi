@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Patch, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Body, Param, UseGuards, ForbiddenException } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { TripsService } from './trips.service';
 import { ChatService } from '../chat/chat.service';
@@ -46,14 +46,18 @@ export class TripsController {
 
   @Get('pending')
   @ApiOperation({ summary: 'Ver viajes pendientes (para conductores)' })
-  getPending() {
-    return this.tripsService.getPendingTrips();
+  getPending(@CurrentUser('sub') userId: string) {
+    return this.tripsService.getPendingTrips(userId);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Ver detalle de un viaje' })
-  findOne(@Param('id') id: string) {
-    return this.tripsService.findById(id);
+  async findOne(@CurrentUser('sub') userId: string, @Param('id') id: string) {
+    const trip = await this.tripsService.findById(id);
+    if (trip.passenger.id !== userId && trip.driver?.user?.id !== userId) {
+      throw new ForbiddenException('No autorizado');
+    }
+    return trip;
   }
 
   @Post(':id/accept')
@@ -80,7 +84,11 @@ export class TripsController {
 
   @Get(':id/messages')
   @ApiOperation({ summary: 'Historial de chat del viaje' })
-  getMessages(@Param('id') id: string) {
+  async getMessages(@CurrentUser('sub') userId: string, @Param('id') id: string) {
+    const trip = await this.tripsService.findById(id);
+    if (trip.passenger.id !== userId && trip.driver?.user?.id !== userId) {
+      throw new ForbiddenException('No autorizado');
+    }
     return this.chatService.getMessages(id);
   }
 
@@ -88,6 +96,9 @@ export class TripsController {
   @ApiOperation({ summary: 'Activar SOS durante el viaje' })
   async sos(@CurrentUser('sub') userId: string, @Param('id') id: string) {
     const trip = await this.tripsService.findById(id);
+    if (trip.passenger.id !== userId && trip.driver?.user?.id !== userId) {
+      throw new ForbiddenException('No autorizado');
+    }
 
     // Notify all admins
     const admins = await this.prisma.user.findMany({ where: { role: 'ADMIN' } });
@@ -116,6 +127,9 @@ export class TripsController {
   @ApiOperation({ summary: 'Datos para factura/recibo del viaje' })
   async getInvoice(@CurrentUser('sub') userId: string, @Param('id') id: string) {
     const trip = await this.tripsService.findById(id);
+    if (trip.passenger.id !== userId && trip.driver?.user?.id !== userId) {
+      throw new ForbiddenException('No autorizado');
+    }
     const passenger = await this.prisma.user.findUnique({
       where: { id: trip.passenger.id },
       select: { name: true, email: true, cuit: true },

@@ -169,7 +169,12 @@ export class FreightService {
     if (dto.cancelReason) updateData.cancelReason = dto.cancelReason;
 
     if (dto.status === FreightStatus.COMPLETED) {
-      updateData.finalPrice = dto.finalPrice ?? freight.estimatedPrice;
+      const finalPrice = dto.finalPrice ?? freight.estimatedPrice;
+      const maxAllowed = freight.estimatedPrice * 2;
+      if (finalPrice < 0 || finalPrice > maxAllowed) {
+        throw new BadRequestException(`El precio final debe estar entre $0 y $${maxAllowed.toLocaleString('es-AR')}`);
+      }
+      updateData.finalPrice = finalPrice;
       await this.prisma.driver.update({
         where: { id: driver!.id },
         data: { totalTrips: { increment: 1 } },

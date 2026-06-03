@@ -31,7 +31,7 @@ export class UsersController {
     @Query('page') page = 1,
     @Query('limit') limit = 20,
   ) {
-    return this.usersService.getMyTrips(userId, +page, +limit);
+    return this.usersService.getMyTrips(userId, +page, Math.min(100, +limit));
   }
 
   @Get('me/deliveries')
@@ -41,6 +41,6 @@ export class UsersController {
     @Query('page') page = 1,
     @Query('limit') limit = 20,
   ) {
-    return this.usersService.getMyDeliveries(userId, +page, +limit);
+    return this.usersService.getMyDeliveries(userId, +page, Math.min(100, +limit));
   }
 }

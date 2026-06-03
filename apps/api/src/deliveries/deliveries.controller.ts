@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Patch, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Body, Param, UseGuards, ForbiddenException } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { DeliveriesService } from './deliveries.service';
 import {
@@ -37,8 +37,12 @@ export class DeliveriesController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Ver detalle de un envío' })
-  findOne(@Param('id') id: string) {
-    return this.deliveriesService.findById(id);
+  async findOne(@CurrentUser('sub') userId: string, @Param('id') id: string) {
+    const delivery = await this.deliveriesService.findById(id);
+    if (delivery.sender.id !== userId && delivery.driver?.user?.id !== userId) {
+      throw new ForbiddenException('No autorizado');
+    }
+    return delivery;
   }
 
   @Post(':id/accept')

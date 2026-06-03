@@ -3,6 +3,8 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { IsString, IsNumber, IsOptional, IsInt, Min, Max, IsDateString } from 'class-validator';
 import { DiscountsService } from './discounts.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 
 class CreateDiscountDto {
   @IsString() code: string;
@@ -31,9 +33,13 @@ export class DiscountsController {
   constructor(private discountsService: DiscountsService) {}
 
   @Get()
+  @UseGuards(RolesGuard)
+  @Roles('ADMIN')
   findAll() { return this.discountsService.findAll(); }
 
   @Post()
+  @UseGuards(RolesGuard)
+  @Roles('ADMIN')
   create(@Body() dto: CreateDiscountDto) {
     return this.discountsService.create({
       ...dto,
@@ -43,6 +49,8 @@ export class DiscountsController {
   }
 
   @Patch(':id')
+  @UseGuards(RolesGuard)
+  @Roles('ADMIN')
   update(@Param('id') id: string, @Body() dto: UpdateDiscountDto) {
     return this.discountsService.update(id, dto);
   }

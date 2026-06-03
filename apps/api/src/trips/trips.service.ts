@@ -139,17 +139,20 @@ export class TripsService {
   async acceptTrip(driverUserId: string, tripId: string) {
     const driver = await this.prisma.driver.findUnique({ where: { userId: driverUserId } });
     if (!driver) throw new NotFoundException('Conductor no encontrado');
+    if (!driver.isVerified) throw new ForbiddenException('Tu cuenta no está verificada');
     if (!driver.isAvailable) throw new ForbiddenException('No estás disponible');
 
-    const trip = await this.prisma.trip.findUnique({ where: { id: tripId } });
-    if (!trip) throw new NotFoundException('Viaje no encontrado');
-    if (trip.status !== TripStatus.PENDING) {
+    const result = await this.prisma.trip.updateMany({
+      where: { id: tripId, status: TripStatus.PENDING },
+      data: { driverId: driver.id, status: TripStatus.ACCEPTED },
+    });
+
+    if (result.count === 0) {
       throw new BadRequestException('El viaje ya no está disponible');
     }
 
-    const updated = await this.prisma.trip.update({
+    const updated = await this.prisma.trip.findUnique({
       where: { id: tripId },
-      data: { driverId: driver.id, status: TripStatus.ACCEPTED },
       include: {
         passenger: { select: { id: true, name: true, phone: true, avatarUrl: true } },
         driver: { include: { user: { select: { id: true, name: true, phone: true, avatarUrl: true } } } },
@@ -157,9 +160,9 @@ export class TripsService {
     });
 
     this.notifications.sendToUser(
-      trip.passengerId,
+      updated!.passengerId,
       '¡Conductor en camino!',
-      `${updated.driver!.user.name} aceptó tu viaje y está en camino`,
+      `${updated!.driver!.user.name} aceptó tu viaje y está en camino`,
       { tripId },
     );
 
@@ -285,7 +288,10 @@ export class TripsService {
     });
   }
 
-  async getPendingTrips() {
+  async getPendingTrips(driverUserId: string) {
+    const driver = await this.prisma.driver.findUnique({ where: { userId: driverUserId } });
+    if (!driver?.isVerified) throw new ForbiddenException('Solo conductores verificados pueden ver viajes pendientes');
+
     return this.prisma.trip.findMany({
       where: { status: TripStatus.PENDING },
       include: {

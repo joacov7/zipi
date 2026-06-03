@@ -87,8 +87,9 @@ export class NearbyDriversDto {
   @IsOptional()
   vehicleType?: VehicleType;
 
-  @ApiPropertyOptional({ default: 5 })
+  @ApiPropertyOptional({ default: 5, maximum: 50 })
   @IsNumber()
+  @Max(50)
   @IsOptional()
   radiusKm?: number;
 }

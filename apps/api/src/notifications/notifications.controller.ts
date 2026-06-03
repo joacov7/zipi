@@ -26,7 +26,7 @@ export class NotificationsController {
   }
 
   @Delete('token')
-  remove(@Body() dto: RemoveTokenDto) {
-    return this.notificationsService.removeToken(dto.token);
+  remove(@Req() req: any, @Body() dto: RemoveTokenDto) {
+    return this.notificationsService.removeToken(req.user.sub, dto.token);
   }
 }

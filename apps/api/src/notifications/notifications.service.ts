@@ -18,8 +18,8 @@ export class NotificationsService {
     });
   }
 
-  async removeToken(token: string) {
-    await this.prisma.pushToken.deleteMany({ where: { token } });
+  async removeToken(userId: string, token: string) {
+    await this.prisma.pushToken.deleteMany({ where: { token, userId } });
   }
 
   async sendToUser(userId: string, title: string, body: string, data?: Record<string, any>) {
@@ -48,7 +48,7 @@ export class NotificationsService {
                 const failedToken = expoTokens.find((t) =>
                   messages.some((m) => m.to === t.token)
                 );
-                if (failedToken) await this.removeToken(failedToken.token);
+                if (failedToken) await this.removeToken(failedToken.userId, failedToken.token);
               }
             }
           }

@@ -9,8 +9,10 @@ import {
   ServiceRequestStatus,
   QuoteStatus,
   JobStatus,
+  WalletTransactionType,
 } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { WalletService } from '../wallet/wallet.service';
 import {
   CreateContractorProfileDto,
   CreateServiceRequestDto,
@@ -25,7 +27,10 @@ const PLATFORM_FEE_PERCENT = 0.15;
 
 @Injectable()
 export class ServicesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private wallet: WalletService,
+  ) {}
 
   // ─── Categories ───────────────────────────────────────────────────────────
 
@@ -272,6 +277,12 @@ export class ServicesService {
     if (job.clientId !== clientId) throw new ForbiddenException('No autorizado');
     if (job.status !== JobStatus.PENDING_PAYMENT) throw new BadRequestException('Estado inválido');
 
+    await this.wallet.debit(
+      clientId,
+      job.escrowAmount,
+      `Pago trabajo ${jobId.slice(-6).toUpperCase()}`,
+    );
+
     return this.prisma.serviceJob.update({
       where: { id: jobId },
       data: { status: JobStatus.PAID },
@@ -304,6 +315,8 @@ export class ServicesService {
     if (job.clientId !== clientId) throw new ForbiddenException('No autorizado');
     if (job.status !== JobStatus.IN_PROGRESS) throw new BadRequestException('El trabajo no está en progreso');
 
+    const contractor = await this.prisma.contractorProfile.findUnique({ where: { id: job.contractorId } });
+
     await this.prisma.serviceRequest.update({
       where: { id: job.requestId },
       data: { status: ServiceRequestStatus.COMPLETED },
@@ -313,6 +326,15 @@ export class ServicesService {
       where: { id: job.contractorId },
       data: { totalJobs: { increment: 1 } },
     });
+
+    if (contractor) {
+      await this.wallet.credit(
+        contractor.userId,
+        job.finalAmount,
+        WalletTransactionType.CREDIT,
+        `Pago trabajo ${jobId.slice(-6).toUpperCase()}`,
+      );
+    }
 
     return this.prisma.serviceJob.update({
       where: { id: jobId },

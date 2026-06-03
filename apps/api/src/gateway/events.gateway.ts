@@ -12,6 +12,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { SocketEvent } from '@zipi/shared';
 import { ChatService } from '../chat/chat.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 interface AuthSocket extends Socket {
   userId?: string;
@@ -20,7 +21,7 @@ interface AuthSocket extends Socket {
 }
 
 @WebSocketGateway({
-  cors: { origin: '*', credentials: true },
+  cors: { origin: process.env.CORS_ORIGINS?.split(',') ?? [], credentials: true },
   namespace: '/',
 })
 export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -34,6 +35,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private jwtService: JwtService,
     private config: ConfigService,
     private chatService: ChatService,
+    private prisma: PrismaService,
   ) {}
 
   async handleConnection(client: AuthSocket) {
@@ -62,16 +64,20 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage(SocketEvent.DRIVER_LOCATION_UPDATE)
-  handleLocationUpdate(
+  async handleLocationUpdate(
     @ConnectedSocket() client: AuthSocket,
-    @MessageBody() data: { driverId: string; lat: number; lng: number; heading?: number },
+    @MessageBody() data: { lat: number; lng: number; heading?: number },
   ) {
-    client.driverId = data.driverId;
-    this.driverSockets.set(data.driverId, client.id);
+    if (!client.userId) return;
 
-    // Broadcast to passengers watching this driver
-    this.server.to(`driver:${data.driverId}:watchers`).emit(SocketEvent.LOCATION_UPDATE, {
-      driverId: data.driverId,
+    const driver = await this.prisma.driver.findUnique({ where: { userId: client.userId }, select: { id: true } });
+    if (!driver) return;
+
+    client.driverId = driver.id;
+    this.driverSockets.set(driver.id, client.id);
+
+    this.server.to(`driver:${driver.id}:watchers`).emit(SocketEvent.LOCATION_UPDATE, {
+      driverId: driver.id,
       lat: data.lat,
       lng: data.lng,
       heading: data.heading,
@@ -133,14 +139,17 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('chat:send')
   async handleChatSend(
     @ConnectedSocket() client: AuthSocket,
-    @MessageBody() data: { tripId: string; content: string; senderName: string },
+    @MessageBody() data: { tripId: string; content: string },
   ) {
     if (!client.userId || !data.content?.trim()) return;
+
+    const user = await this.prisma.user.findUnique({ where: { id: client.userId }, select: { name: true } });
+    const senderName = user?.name ?? 'Unknown';
 
     const message = await this.chatService.saveMessage(
       data.tripId,
       client.userId,
-      data.senderName,
+      senderName,
       data.content.trim(),
     );
 

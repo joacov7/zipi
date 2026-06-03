@@ -46,9 +46,16 @@ export class DiscountsService {
   }
 
   async redeem(code: string) {
-    await this.prisma.discountCode.update({
-      where: { code: code.toUpperCase() },
-      data: { usedCount: { increment: 1 } },
-    });
+    const result = await this.prisma.$executeRaw`
+      UPDATE discount_codes
+      SET used_count = used_count + 1
+      WHERE code = ${code.toUpperCase()}
+        AND is_active = true
+        AND (max_uses = 0 OR used_count < max_uses)
+        AND (expires_at IS NULL OR expires_at > NOW())
+    `;
+    if (result === 0) {
+      throw new BadRequestException('El código de descuento ya no es válido');
+    }
   }
 }
