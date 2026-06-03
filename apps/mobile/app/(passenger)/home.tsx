@@ -57,6 +57,20 @@ export default function PassengerHomeScreen() {
         <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
       </TouchableOpacity>
 
+      <TouchableOpacity
+        style={styles.freightCard}
+        onPress={() => router.push('/(passenger)/shared-trips')}
+      >
+        <View style={styles.freightCardLeft}>
+          <Ionicons name="people" size={28} color="#8b5cf6" />
+          <View style={{ marginLeft: 12 }}>
+            <Text style={styles.freightTitle}>Viajes compartidos</Text>
+            <Text style={styles.freightSubtitle}>Viajá con otros y dividí el costo</Text>
+          </View>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+      </TouchableOpacity>
+
       {recentTrips.length > 0 && (
         <View>
           <Text style={styles.sectionTitle}>Viajes recientes</Text>

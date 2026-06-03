@@ -33,6 +33,8 @@ import WalletPage from './pages/passenger/WalletPage';
 import ReferralPage from './pages/passenger/ReferralPage';
 import InvoicePage from './pages/passenger/InvoicePage';
 import ProfilePage from './pages/passenger/ProfilePage';
+import SharedTripsPage from './pages/passenger/SharedTripsPage';
+import SharedTripDetailPage from './pages/passenger/SharedTripDetailPage';
 
 // Admin
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -154,6 +156,22 @@ export default function App() {
         element={
           <PrivateRoute roles={[UserRole.PASSENGER]}>
             <Layout><ProfilePage /></Layout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/shared-trips"
+        element={
+          <PrivateRoute roles={[UserRole.PASSENGER]}>
+            <Layout><SharedTripsPage /></Layout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/shared-trips/:id"
+        element={
+          <PrivateRoute roles={[UserRole.PASSENGER]}>
+            <Layout><SharedTripDetailPage /></Layout>
           </PrivateRoute>
         }
       />

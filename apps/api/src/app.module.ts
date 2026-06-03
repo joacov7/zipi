@@ -15,6 +15,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { ZonesModule } from './zones/zones.module';
 import { DiscountsModule } from './discounts/discounts.module';
 import { WalletModule } from './wallet/wallet.module';
+import { SharedTripsModule } from './shared-trips/shared-trips.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { WalletModule } from './wallet/wallet.module';
     ZonesModule,
     DiscountsModule,
     WalletModule,
+    SharedTripsModule,
   ],
 })
 export class AppModule {}

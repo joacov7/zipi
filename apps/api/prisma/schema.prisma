@@ -34,6 +34,8 @@ model User {
   contractorProfile   ContractorProfile?
   serviceRequests     ServiceRequest[]    @relation("ClientRequests")
   serviceJobsAsClient ServiceJob[]        @relation("ClientJobs")
+  sharedTripsPublished     SharedTrip[]             @relation("PublishedSharedTrips")
+  sharedTripParticipations SharedTripParticipant[]  @relation("SharedTripParticipations")
 
   @@map("users")
 }
@@ -446,4 +448,52 @@ enum WalletTransactionType {
   DEBIT
   REFERRAL_BONUS
   ADMIN_ADJUSTMENT
+}
+
+model SharedTrip {
+  id              String           @id @default(uuid())
+  publisherId     String
+  publisher       User             @relation("PublishedSharedTrips", fields: [publisherId], references: [id])
+  originAddress   String
+  originLat       Float
+  originLng       Float
+  destAddress     String
+  destLat         Float
+  destLng         Float
+  departureTime   DateTime
+  totalSeats      Int
+  costPerSeat     Float
+  description     String?
+  status          SharedTripStatus @default(OPEN)
+  participants    SharedTripParticipant[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@map("shared_trips")
+}
+
+model SharedTripParticipant {
+  id           String            @id @default(uuid())
+  sharedTripId String
+  sharedTrip   SharedTrip        @relation(fields: [sharedTripId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User              @relation("SharedTripParticipations", fields: [userId], references: [id])
+  status       ParticipantStatus @default(PENDING)
+  createdAt    DateTime          @default(now())
+
+  @@unique([sharedTripId, userId])
+  @@map("shared_trip_participants")
+}
+
+enum SharedTripStatus {
+  OPEN
+  FULL
+  DEPARTED
+  CANCELLED
+}
+
+enum ParticipantStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
 }
