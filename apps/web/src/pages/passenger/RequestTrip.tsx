@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
-import { MapPin, Navigation, Clock, Tag, Zap, X, Wallet, Locate } from 'lucide-react';
+import { MapPin, Navigation, Clock, Tag, Zap, X, Wallet, Locate, ChevronLeft, Check } from 'lucide-react';
 import { DEFAULT_MAP_CENTER } from '@zipi/shared';
 import AddressInput from '../../components/ui/AddressInput';
 import { useAuthStore } from '../../stores/auth.store';
@@ -121,7 +121,6 @@ export default function RequestTrip() {
         discountCode: discount ? discountCode.trim().toUpperCase() : undefined,
         useWalletCredits: useCredits,
       });
-      // Update wallet balance optimistically in store
       if (useCredits && user && creditsToApply > 0 && accessToken && refreshToken) {
         setAuth({ ...user, walletBalance: (user.walletBalance ?? 0) - creditsToApply }, accessToken, refreshToken);
       }
@@ -139,141 +138,161 @@ export default function RequestTrip() {
   const finalPrice = Math.max(0, afterDiscount - creditsToApply);
 
   if (step === 'confirm' && estimate) {
-
     return (
-      <div className="max-w-lg mx-auto space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Confirmar viaje</h1>
-          <p className="text-gray-500 mt-1">Revisá los detalles antes de confirmar</p>
+      <div className="max-w-lg mx-auto">
+        <div className="flex items-center gap-3 mb-5">
+          <button
+            onClick={() => setStep('form')}
+            className="w-9 h-9 flex items-center justify-center rounded-full bg-white border border-zipi-rim hover:bg-zipi-surface2 text-zipi-muted transition-colors"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <h1 className="text-[26px] font-extrabold text-zipi-ink tracking-tight">Confirmar viaje</h1>
         </div>
 
-        <div className="card space-y-4">
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mt-0.5">
-              <Navigation size={16} className="text-green-600" />
+        {/* Route card */}
+        <div className="bg-white border border-zipi-rim rounded-[22px] p-[18px] shadow-zipi mb-4">
+          <div className="flex items-start gap-3 mb-3">
+            <div className="flex flex-col items-center shrink-0 pt-1">
+              <span className="w-[9px] h-[9px] rounded-full border-2 border-zipi-ink bg-white" />
+              <span className="w-px flex-1 min-h-[28px] bg-zipi-rim my-1" />
+              <span className="w-[9px] h-[9px] rounded-[3px] bg-zipi-500" />
             </div>
-            <div>
-              <p className="text-xs text-gray-500">Origen</p>
-              <p className="font-medium">{form.originAddress || 'Mi ubicación actual'}</p>
+            <div className="flex-1 space-y-3">
+              <div>
+                <p className="text-[11px] text-zipi-faint mb-0.5">Origen</p>
+                <p className="text-[14px] font-semibold text-zipi-ink leading-tight">
+                  {form.originAddress || 'Mi ubicación actual'}
+                </p>
+              </div>
+              <div>
+                <p className="text-[11px] text-zipi-faint mb-0.5">Destino</p>
+                <p className="text-[14px] font-semibold text-zipi-ink leading-tight">{form.destAddress}</p>
+              </div>
             </div>
           </div>
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mt-0.5">
-              <MapPin size={16} className="text-red-600" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Destino</p>
-              <p className="font-medium">{form.destAddress}</p>
-            </div>
+          <div className="flex items-center gap-1.5 text-[12.5px] text-zipi-muted pt-2 border-t border-zipi-rim">
+            <Clock size={12} />
+            <span>~{estimate.estimatedMinutes} min · {estimate.distanceKm} km</span>
           </div>
         </div>
 
         {/* Surge alert */}
         {estimate.surgeMultiplier > 1 && (
-          <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl p-3">
-            <Zap size={18} className="text-amber-500 shrink-0" />
+          <div
+            className="flex items-center gap-3 rounded-[16px] p-3.5 mb-4"
+            style={{ background: 'rgba(239,144,8,0.1)', borderLeft: '3px solid #EF9008' }}
+          >
+            <Zap size={18} style={{ color: '#EF9008' }} className="shrink-0" />
             <div>
-              <p className="text-sm font-semibold text-amber-800">{estimate.surgeLabel}</p>
-              <p className="text-xs text-amber-600">Tarifa ×{estimate.surgeMultiplier} activa por alta demanda</p>
+              <p className="text-[13px] font-bold" style={{ color: '#C77A00' }}>{estimate.surgeLabel}</p>
+              <p className="text-[12px]" style={{ color: '#C77A00' }}>Tarifa ×{estimate.surgeMultiplier} por alta demanda</p>
             </div>
           </div>
         )}
 
-        <div className="card">
-          <h3 className="font-semibold text-gray-900 mb-4">Estimación de precio</h3>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between text-gray-600">
-              <span>Tarifa base</span>
-              <span>${estimate.breakdown.baseFare.toLocaleString('es-AR')}</span>
-            </div>
-            <div className="flex justify-between text-gray-600">
-              <span>Distancia ({estimate.distanceKm} km)</span>
-              <span>${estimate.breakdown.distanceFare.toLocaleString('es-AR')}</span>
-            </div>
-            <div className="flex justify-between text-gray-600">
-              <span>Tiempo ({estimate.estimatedMinutes} min)</span>
-              <span>${estimate.breakdown.timeFare.toLocaleString('es-AR')}</span>
-            </div>
+        {/* Price breakdown */}
+        <div className="bg-white border border-zipi-rim rounded-[22px] p-[18px] shadow-zipi mb-4">
+          <p className="text-[13px] font-bold text-zipi-ink mb-3">Desglose del precio</p>
+          <div className="space-y-2">
+            {[
+              { label: 'Tarifa base', val: `$${estimate.breakdown.baseFare.toLocaleString('es-AR')}` },
+              { label: `Distancia (${estimate.distanceKm} km)`, val: `$${estimate.breakdown.distanceFare.toLocaleString('es-AR')}` },
+              { label: `Tiempo (${estimate.estimatedMinutes} min)`, val: `$${estimate.breakdown.timeFare.toLocaleString('es-AR')}` },
+            ].map(({ label, val }) => (
+              <div key={label} className="flex justify-between text-[13.5px] text-zipi-muted">
+                <span>{label}</span><span>{val}</span>
+              </div>
+            ))}
             {estimate.surgeMultiplier > 1 && (
-              <div className="flex justify-between text-amber-600">
-                <span>Tarifa dinámica ×{estimate.surgeMultiplier}</span>
-                <span>incluida</span>
+              <div className="flex justify-between text-[13.5px]" style={{ color: '#C77A00' }}>
+                <span>Tarifa dinámica ×{estimate.surgeMultiplier}</span><span>incluida</span>
               </div>
             )}
             {discount && (
-              <div className="flex justify-between text-green-600">
+              <div className="flex justify-between text-[13.5px]" style={{ color: '#0E9E6E' }}>
                 <span>Descuento ({discount.discountPercent}%)</span>
                 <span>-${discount.discountAmount.toLocaleString('es-AR')}</span>
               </div>
             )}
             {creditsToApply > 0 && (
-              <div className="flex justify-between text-zipi-600">
+              <div className="flex justify-between text-[13.5px] text-zipi-500">
                 <span>Créditos billetera</span>
                 <span>-${creditsToApply.toLocaleString('es-AR')}</span>
               </div>
             )}
-            <div className="flex justify-between font-bold text-gray-900 pt-2 border-t border-gray-100 text-base">
+            <div className="flex justify-between font-extrabold text-zipi-ink text-[16px] pt-2 border-t border-dashed border-zipi-rim">
               <span>Total estimado</span>
-              <span className="text-zipi-600">${finalPrice.toLocaleString('es-AR')}</span>
+              <span className="text-zipi-500">${finalPrice.toLocaleString('es-AR')}</span>
             </div>
-            {creditsToApply > 0 && finalPrice === 0 && (
-              <p className="text-xs text-zipi-500 text-center mt-1">¡Viaje cubierto completamente con créditos!</p>
-            )}
           </div>
-          <div className="flex items-center gap-2 mt-3 text-sm text-gray-500">
-            <Clock size={14} />
-            <span>Tiempo estimado: {estimate.estimatedMinutes} minutos</span>
-          </div>
+          {creditsToApply > 0 && finalPrice === 0 && (
+            <p className="text-[12px] font-semibold text-center mt-2" style={{ color: '#0E9E6E' }}>
+              ¡Viaje cubierto completamente con créditos!
+            </p>
+          )}
         </div>
 
-        {/* Wallet credits */}
+        {/* Wallet credits toggle */}
         {walletBalance > 0 && (
-          <div className="card">
+          <div className="bg-white border border-zipi-rim rounded-[22px] p-[18px] shadow-zipi mb-4">
             <button
               onClick={() => setUseCredits((v) => !v)}
-              className={`w-full flex items-center justify-between gap-3 transition-colors ${useCredits ? 'text-zipi-700' : 'text-gray-700'}`}
+              className="w-full flex items-center justify-between gap-3"
             >
               <div className="flex items-center gap-3">
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${useCredits ? 'bg-zipi-100' : 'bg-gray-100'}`}>
-                  <Wallet size={18} className={useCredits ? 'text-zipi-600' : 'text-gray-500'} />
+                <div
+                  className="w-10 h-10 rounded-[12px] flex items-center justify-center shrink-0"
+                  style={{ background: useCredits ? 'rgba(239,144,8,0.12)' : 'rgba(163,158,149,0.12)' }}
+                >
+                  <Wallet size={19} style={{ color: useCredits ? '#EF9008' : '#a39e95' }} />
                 </div>
                 <div className="text-left">
-                  <p className="text-sm font-semibold">Usar créditos de billetera</p>
-                  <p className="text-xs text-gray-500">Tenés ${walletBalance.toLocaleString('es-AR')} disponibles</p>
+                  <p className="text-[14px] font-bold text-zipi-ink">Usar créditos de billetera</p>
+                  <p className="text-[12px] text-zipi-muted">${walletBalance.toLocaleString('es-AR')} disponibles</p>
                 </div>
               </div>
-              <div className={`w-10 h-6 rounded-full transition-colors relative ${useCredits ? 'bg-zipi-500' : 'bg-gray-300'}`}>
-                <span className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${useCredits ? 'translate-x-5' : 'translate-x-1'}`} />
+              <div
+                className="w-10 h-6 rounded-full relative transition-colors shrink-0"
+                style={{ background: useCredits ? '#EF9008' : '#d4cfc9' }}
+              >
+                <span
+                  className="absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform"
+                  style={{ transform: useCredits ? 'translateX(20px)' : 'translateX(4px)' }}
+                />
               </div>
             </button>
             {useCredits && (
-              <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between text-sm">
-                <span className="text-zipi-600 font-medium">Créditos a usar</span>
-                <span className="font-semibold text-zipi-600">-${creditsToApply.toLocaleString('es-AR')}</span>
+              <div className="mt-3 pt-3 border-t border-zipi-rim flex justify-between text-[13.5px]">
+                <span className="text-zipi-500 font-semibold">Créditos a descontar</span>
+                <span className="font-bold text-zipi-500">-${creditsToApply.toLocaleString('es-AR')}</span>
               </div>
             )}
           </div>
         )}
 
         {/* Discount code */}
-        <div className="card">
-          <p className="text-sm font-medium text-gray-700 mb-2">Código de descuento</p>
+        <div className="bg-white border border-zipi-rim rounded-[22px] p-[18px] shadow-zipi mb-4">
+          <p className="text-[13px] font-bold text-zipi-ink mb-2.5">Código de descuento</p>
           {discount ? (
-            <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-xl px-3 py-2">
+            <div
+              className="flex items-center justify-between rounded-[13px] px-3 py-2.5"
+              style={{ background: 'rgba(14,158,110,0.1)', border: '1px solid rgba(14,158,110,0.25)' }}
+            >
               <div className="flex items-center gap-2">
-                <Tag size={14} className="text-green-600" />
-                <span className="text-sm font-semibold text-green-700">
+                <Tag size={13} style={{ color: '#0E9E6E' }} />
+                <span className="text-[13px] font-bold" style={{ color: '#0E9E6E' }}>
                   {discountCode.toUpperCase()} — {discount.discountPercent}% off
                 </span>
               </div>
-              <button onClick={() => { setDiscount(null); setDiscountCode(''); }} className="text-green-500 hover:text-green-700">
-                <X size={16} />
+              <button onClick={() => { setDiscount(null); setDiscountCode(''); }} style={{ color: '#0E9E6E' }}>
+                <X size={15} />
               </button>
             </div>
           ) : (
             <div className="flex gap-2">
               <input
-                className="input flex-1 text-sm"
+                className="input flex-1 text-[13.5px]"
                 placeholder="Ej: ZIPI10"
                 value={discountCode}
                 onChange={(e) => { setDiscountCode(e.target.value); setDiscountError(''); }}
@@ -282,40 +301,42 @@ export default function RequestTrip() {
               <button
                 onClick={applyDiscount}
                 disabled={!discountCode.trim() || discountLoading}
-                className="btn-secondary text-sm px-4"
+                className="h-[46px] px-4 rounded-[13px] bg-zipi-surface2 hover:bg-zipi-rim text-[13.5px] font-bold text-zipi-ink transition-colors disabled:opacity-50"
               >
                 {discountLoading ? '...' : 'Aplicar'}
               </button>
             </div>
           )}
-          {discountError && <p className="text-xs text-red-600 mt-1">{discountError}</p>}
+          {discountError && <p className="text-[12px] mt-1.5" style={{ color: '#E03E63' }}>{discountError}</p>}
         </div>
 
-        <div className="flex gap-3">
-          <button onClick={() => setStep('form')} className="btn-secondary flex-1">
-            Atrás
-          </button>
-          <button onClick={handleConfirm} disabled={loading} className="btn-primary flex-1">
-            {loading ? 'Buscando conductor...' : 'Confirmar viaje'}
-          </button>
-        </div>
+        <button
+          onClick={handleConfirm}
+          disabled={loading}
+          className="h-[54px] w-full rounded-2xl font-bold text-white transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+          style={{ background: '#1A1714' }}
+        >
+          {loading ? 'Buscando conductor...' : 'Confirmar viaje'}
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="max-w-lg mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Pedir un remis</h1>
-        <p className="text-gray-500 mt-1">Ingresá tu destino para ver el precio</p>
-      </div>
+    <div className="max-w-lg mx-auto">
+      <h1 className="text-[26px] font-extrabold text-zipi-ink tracking-tight mb-5">Pedir un remis</h1>
 
-      <div className="card space-y-4">
+      {/* Address inputs card */}
+      <div className="bg-white border border-zipi-rim rounded-[22px] p-[18px] shadow-zipi mb-4 space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-            <Navigation size={14} className="text-green-500" />
-            Desde (tu ubicación)
-            {locating && <span className="text-xs text-zipi-500 font-normal ml-1 flex items-center gap-1"><Locate size={12} className="animate-pulse" /> Obteniendo GPS...</span>}
+          <label className="flex items-center gap-1.5 text-[12.5px] font-bold text-zipi-ink mb-1.5">
+            <Navigation size={13} style={{ color: '#0E9E6E' }} />
+            Desde
+            {locating && (
+              <span className="flex items-center gap-1 text-[11px] font-normal text-zipi-muted ml-1">
+                <Locate size={11} className="animate-pulse" /> Obteniendo GPS...
+              </span>
+            )}
           </label>
           <AddressInput
             value={form.originAddress}
@@ -325,9 +346,9 @@ export default function RequestTrip() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            <MapPin size={14} className="inline mr-1 text-red-500" />
-            Hasta (destino)
+          <label className="flex items-center gap-1.5 text-[12.5px] font-bold text-zipi-ink mb-1.5">
+            <MapPin size={13} className="text-zipi-500" />
+            Hasta
           </label>
           <AddressInput
             value={form.destAddress}
@@ -338,14 +359,15 @@ export default function RequestTrip() {
         </div>
       </div>
 
-      <div>
-        <p className="text-sm font-medium text-gray-700 mb-3">Destinos frecuentes</p>
+      {/* Quick destinations */}
+      <div className="mb-5">
+        <p className="text-[12.5px] font-bold text-zipi-faint uppercase tracking-[0.05em] mb-2.5">Destinos frecuentes</p>
         <div className="flex gap-2 flex-wrap">
           {QUICK_DESTINATIONS.map((dest) => (
             <button
               key={dest.label}
               onClick={() => handleEstimate(dest)}
-              className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:border-zipi-300 hover:bg-zipi-50 transition-colors"
+              className="px-4 py-2 bg-white border border-zipi-rim rounded-full text-[13.5px] font-semibold text-zipi-ink hover:bg-zipi-surface2 transition-colors"
             >
               {dest.label}
             </button>
@@ -356,9 +378,10 @@ export default function RequestTrip() {
       <button
         onClick={() => handleEstimate()}
         disabled={loading || !form.destAddress}
-        className="btn-primary w-full"
+        className="h-[54px] w-full rounded-2xl font-bold text-white transition-opacity disabled:opacity-50"
+        style={{ background: '#1A1714' }}
       >
-        {loading ? 'Calculando...' : 'Ver precio y confirmar'}
+        {loading ? 'Calculando precio...' : 'Ver precio y confirmar'}
       </button>
     </div>
   );

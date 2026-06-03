@@ -1,7 +1,14 @@
 import { useState } from 'react';
 import { useAuthStore } from '../../stores/auth.store';
-import { Copy, Check, Users, Gift } from 'lucide-react';
+import { Copy, Check, Users, Gift, Share2 } from 'lucide-react';
 import { REFERRAL_BONUS } from '../../lib/constants';
+
+const STEPS = [
+  { num: '1', text: 'Compartís tu código único con amigos' },
+  { num: '2', text: 'Tu amigo se registra usando tu código' },
+  { num: '3', text: `Recibís $${REFERRAL_BONUS.toLocaleString('es-AR')} en créditos automáticamente` },
+  { num: '4', text: 'Los créditos se descuentan en tu próximo viaje' },
+];
 
 export default function ReferralPage() {
   const { user } = useAuthStore();
@@ -21,66 +28,79 @@ export default function ReferralPage() {
   };
 
   return (
-    <div className="max-w-lg mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Referí amigos</h1>
-        <p className="text-gray-500 mt-1">Ganás créditos cada vez que alguien se registra con tu código</p>
-      </div>
+    <div className="max-w-lg mx-auto">
+      <h1 className="text-[26px] font-extrabold text-zipi-ink tracking-tight mb-1">Referí amigos</h1>
+      <p className="text-[13.5px] text-zipi-muted mb-5">Ganás créditos cada vez que alguien se registra con tu código</p>
 
-      {/* How it works */}
-      <div className="card space-y-4">
-        <h2 className="font-semibold text-gray-900">¿Cómo funciona?</h2>
-        <div className="space-y-3">
-          {[
-            { icon: '📤', text: 'Compartís tu código único con amigos' },
-            { icon: '📝', text: 'Tu amigo se registra usando tu código' },
-            { icon: '🎁', text: `Recibís $${REFERRAL_BONUS.toLocaleString('es-AR')} en créditos automáticamente` },
-            { icon: '🚗', text: 'Los créditos se descuentan en tu próximo viaje' },
-          ].map((step, i) => (
-            <div key={i} className="flex items-center gap-3">
-              <span className="text-2xl">{step.icon}</span>
-              <p className="text-sm text-gray-700">{step.text}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Referral code */}
-      <div className="card text-center space-y-4">
-        <p className="text-sm text-gray-500 font-medium">Tu código personal</p>
-        <div className="bg-gray-50 rounded-xl py-4 px-6 flex items-center justify-center gap-3">
-          <span className="font-mono text-3xl font-bold text-zipi-600 tracking-widest">{code}</span>
+      {/* Code card */}
+      <div
+        className="rounded-[22px] p-6 mb-4 text-center"
+        style={{
+          background: 'linear-gradient(140deg, rgba(255,255,255,0.14), rgba(0,0,0,0.06) 45%, rgba(0,0,0,0.32)), #EF9008',
+          boxShadow: '0 16px 34px -18px rgba(239,144,8,0.55)',
+        }}
+      >
+        <p className="text-[13px] font-semibold text-white opacity-90 mb-1.5">Tu código personal</p>
+        <p className="font-mono font-extrabold text-[34px] text-white tracking-[0.14em] leading-none mb-5">{code}</p>
+        <div className="flex gap-2.5">
           <button
             onClick={copyCode}
-            className="w-10 h-10 bg-white border border-gray-200 rounded-xl flex items-center justify-center hover:bg-gray-50 transition-colors"
+            className="flex-1 h-[46px] bg-white bg-opacity-20 hover:bg-opacity-30 rounded-[14px] font-bold text-white text-[14px] flex items-center justify-center gap-2 transition-all"
           >
-            {copied ? <Check size={18} className="text-green-500" /> : <Copy size={18} className="text-gray-500" />}
+            {copied ? <Check size={16} /> : <Copy size={16} />}
+            {copied ? '¡Copiado!' : 'Copiar'}
           </button>
-        </div>
-
-        <div className="flex gap-3">
-          <button onClick={copyCode} className="btn-secondary flex-1 flex items-center justify-center gap-2">
-            <Copy size={16} />
-            {copied ? '¡Copiado!' : 'Copiar código'}
-          </button>
-          <button onClick={shareWhatsApp} className="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl transition-colors flex items-center justify-center gap-2">
-            <span>📱</span>
+          <button
+            onClick={shareWhatsApp}
+            className="flex-1 h-[46px] bg-white bg-opacity-20 hover:bg-opacity-30 rounded-[14px] font-bold text-white text-[14px] flex items-center justify-center gap-2 transition-all"
+          >
+            <Share2 size={16} />
             WhatsApp
           </button>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="card text-center">
-          <Users size={24} className="text-purple-500 mx-auto mb-2" />
-          <p className="text-2xl font-bold text-gray-900">—</p>
-          <p className="text-xs text-gray-500">Amigos referidos</p>
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="bg-white border border-zipi-rim rounded-[22px] p-4 shadow-zipi text-center">
+          <div
+            className="w-10 h-10 rounded-[12px] flex items-center justify-center mx-auto mb-2"
+            style={{ background: 'rgba(109,90,224,0.12)' }}
+          >
+            <Users size={19} style={{ color: '#6D5AE0' }} />
+          </div>
+          <p className="text-[24px] font-extrabold text-zipi-ink">—</p>
+          <p className="text-[12px] text-zipi-muted">Amigos referidos</p>
         </div>
-        <div className="card text-center">
-          <Gift size={24} className="text-zipi-500 mx-auto mb-2" />
-          <p className="text-2xl font-bold text-gray-900">${(user?.walletBalance ?? 0).toLocaleString('es-AR')}</p>
-          <p className="text-xs text-gray-500">Créditos ganados</p>
+        <div className="bg-white border border-zipi-rim rounded-[22px] p-4 shadow-zipi text-center">
+          <div
+            className="w-10 h-10 rounded-[12px] flex items-center justify-center mx-auto mb-2"
+            style={{ background: 'rgba(239,144,8,0.12)' }}
+          >
+            <Gift size={19} className="text-zipi-500" />
+          </div>
+          <p className="text-[24px] font-extrabold text-zipi-ink">
+            ${(user?.walletBalance ?? 0).toLocaleString('es-AR')}
+          </p>
+          <p className="text-[12px] text-zipi-muted">Créditos ganados</p>
+        </div>
+      </div>
+
+      {/* How it works */}
+      <div className="bg-white border border-zipi-rim rounded-[22px] p-[18px] shadow-zipi">
+        <p className="text-[14px] font-bold text-zipi-ink mb-4">¿Cómo funciona?</p>
+        <div className="space-y-3.5">
+          {STEPS.map(({ num, text }) => (
+            <div key={num} className="flex items-start gap-3.5">
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-extrabold text-white shrink-0"
+                style={{ background: 'linear-gradient(135deg,#EF9008,#D46A04)' }}
+              >
+                {num}
+              </div>
+              <p className="text-[13.5px] text-zipi-muted leading-snug pt-0.5">{text}</p>
+            </div>
+          ))}
         </div>
       </div>
     </div>

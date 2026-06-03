@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { VehicleType, TruckType, MachineryType } from '@zipi/shared';
-import { Car, Bike, Truck, Hammer } from 'lucide-react';
+import { Car, Bike, Truck, Hammer, Star, CheckCircle, Clock } from 'lucide-react';
 
 const TRUCK_TYPES = [
   { value: TruckType.PICKUP,      label: 'Pickup',         desc: '≤1 ton' },
@@ -18,6 +18,13 @@ const MACHINERY_TYPES = [
   { value: MachineryType.FORKLIFT,       label: 'Autoelevador' },
   { value: MachineryType.CONCRETE_MIXER, label: 'Hormigonera' },
   { value: MachineryType.COMPACTOR,      label: 'Compactadora' },
+];
+
+const VEHICLE_OPTS = [
+  { type: VehicleType.CAR,             icon: Car,    label: 'Auto' },
+  { type: VehicleType.MOTORCYCLE,      icon: Bike,   label: 'Moto' },
+  { type: VehicleType.TRUCK,           icon: Truck,  label: 'Camión' },
+  { type: VehicleType.HEAVY_MACHINERY, icon: Hammer, label: 'Maquinaria' },
 ];
 
 export default function DriverProfile() {
@@ -58,45 +65,52 @@ export default function DriverProfile() {
   });
 
   if (profile) {
+    const VehicleIcon = profile.vehicleType === VehicleType.CAR ? Car : profile.vehicleType === VehicleType.MOTORCYCLE ? Bike : profile.vehicleType === VehicleType.TRUCK ? Truck : Hammer;
     return (
-      <div className="max-w-lg mx-auto space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">Mi perfil de conductor</h1>
+      <div className="max-w-lg mx-auto">
+        <h1 className="text-[26px] font-extrabold text-zipi-ink tracking-tight mb-5">Mi perfil de conductor</h1>
 
-        <div className="card space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-zipi-100 rounded-xl flex items-center justify-center">
-              {profile.vehicleType === VehicleType.CAR ? (
-                <Car size={24} className="text-zipi-600" />
-              ) : (
-                <Bike size={24} className="text-zipi-600" />
-              )}
+        {/* Vehicle hero card */}
+        <div className="bg-white border border-zipi-rim rounded-[22px] p-[18px] shadow-zipi mb-4">
+          <div className="flex items-center gap-3.5 mb-4">
+            <div
+              className="w-[52px] h-[52px] rounded-[14px] flex items-center justify-center shrink-0"
+              style={{ background: 'rgba(239,144,8,0.12)' }}
+            >
+              <VehicleIcon size={24} style={{ color: '#EF9008' }} />
             </div>
             <div>
-              <p className="font-bold text-gray-900">{profile.vehicleModel}</p>
-              <p className="text-sm text-gray-500">
+              <p className="text-[17px] font-extrabold text-zipi-ink">{profile.vehicleModel}</p>
+              <p className="text-[13px] text-zipi-muted">
                 {profile.vehiclePlate} · {profile.vehicleColor} · {profile.vehicleYear}
               </p>
             </div>
           </div>
-
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <p className="text-gray-500">Licencia</p>
-              <p className="font-medium">{profile.licenseNumber}</p>
+          <div className="grid grid-cols-2 gap-3 text-[13.5px]">
+            <div className="bg-zipi-surface2 rounded-[13px] p-3">
+              <p className="text-[11px] text-zipi-faint mb-0.5">Licencia</p>
+              <p className="font-bold text-zipi-ink">{profile.licenseNumber}</p>
             </div>
-            <div>
-              <p className="text-gray-500">Estado</p>
-              <span className={`badge ${profile.isVerified ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                {profile.isVerified ? 'Verificado' : 'Pendiente de verificación'}
-              </span>
+            <div className="bg-zipi-surface2 rounded-[13px] p-3">
+              <p className="text-[11px] text-zipi-faint mb-1">Estado</p>
+              <div className="flex items-center gap-1">
+                {profile.isVerified ? (
+                  <><CheckCircle size={13} style={{ color: '#0E9E6E' }} /><span className="font-bold" style={{ color: '#0E9E6E' }}>Verificado</span></>
+                ) : (
+                  <><Clock size={13} style={{ color: '#C77A00' }} /><span className="font-bold" style={{ color: '#C77A00' }}>Pendiente</span></>
+                )}
+              </div>
             </div>
-            <div>
-              <p className="text-gray-500">Calificación</p>
-              <p className="font-medium">⭐ {profile.rating?.toFixed(1)}</p>
+            <div className="bg-zipi-surface2 rounded-[13px] p-3">
+              <p className="text-[11px] text-zipi-faint mb-0.5">Calificación</p>
+              <div className="flex items-center gap-1">
+                <Star size={13} className="text-amber-400 fill-amber-400" />
+                <span className="font-bold text-zipi-ink">{profile.rating?.toFixed(1)}</span>
+              </div>
             </div>
-            <div>
-              <p className="text-gray-500">Viajes totales</p>
-              <p className="font-medium">{profile.totalTrips}</p>
+            <div className="bg-zipi-surface2 rounded-[13px] p-3">
+              <p className="text-[11px] text-zipi-faint mb-0.5">Viajes totales</p>
+              <p className="font-bold text-zipi-ink">{profile.totalTrips}</p>
             </div>
           </div>
         </div>
@@ -105,72 +119,81 @@ export default function DriverProfile() {
   }
 
   return (
-    <div className="max-w-lg mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Configurar perfil de conductor</h1>
-        <p className="text-gray-500 mt-1">Completá tus datos para empezar a trabajar</p>
-      </div>
+    <div className="max-w-lg mx-auto">
+      <h1 className="text-[26px] font-extrabold text-zipi-ink tracking-tight mb-1">Configurar perfil</h1>
+      <p className="text-[13.5px] text-zipi-muted mb-5">Completá tus datos para empezar a trabajar</p>
 
       {success && (
-        <div className="bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 text-sm">
+        <div
+          className="rounded-[13px] px-4 py-3 mb-4 text-[13.5px] font-medium"
+          style={{ background: 'rgba(14,158,110,0.1)', color: '#0E9E6E' }}
+        >
           {success}
         </div>
       )}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
+        <div
+          className="rounded-[13px] px-4 py-3 mb-4 text-[13.5px] font-medium"
+          style={{ background: 'rgba(224,62,99,0.1)', color: '#E03E63' }}
+        >
           {error}
         </div>
       )}
 
-      <div className="card space-y-4">
+      <div className="bg-white border border-zipi-rim rounded-[22px] p-[18px] shadow-zipi space-y-5">
+        {/* Vehicle type */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de vehículo</label>
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { type: VehicleType.CAR,            icon: <Car size={22} />,    label: 'Auto' },
-              { type: VehicleType.MOTORCYCLE,     icon: <Bike size={22} />,   label: 'Moto' },
-              { type: VehicleType.TRUCK,          icon: <Truck size={22} />,  label: 'Camión' },
-              { type: VehicleType.HEAVY_MACHINERY,icon: <Hammer size={22} />, label: 'Maquinaria' },
-            ].map(({ type, icon, label }) => (
+          <label className="block text-[12.5px] font-bold text-zipi-ink mb-2">Tipo de vehículo</label>
+          <div className="grid grid-cols-2 gap-2.5">
+            {VEHICLE_OPTS.map(({ type, icon: Icon, label }) => (
               <button
                 key={type}
                 onClick={() => setForm({ ...form, vehicleType: type })}
-                className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-colors ${
+                className="flex items-center gap-3 p-4 rounded-[16px] border-2 transition-colors"
+                style={
                   form.vehicleType === type
-                    ? 'border-zipi-500 bg-zipi-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
+                    ? { borderColor: '#EF9008', background: 'rgba(239,144,8,0.08)' }
+                    : { borderColor: '#ebe7df' }
+                }
               >
-                {icon}
-                <span className="font-medium">{label}</span>
+                <Icon size={20} style={{ color: form.vehicleType === type ? '#EF9008' : '#a39e95' }} />
+                <span
+                  className="font-bold text-[13.5px]"
+                  style={{ color: form.vehicleType === type ? '#C77A00' : '#1a1714' }}
+                >
+                  {label}
+                </span>
               </button>
             ))}
           </div>
         </div>
 
-        {/* Extra fields for trucks */}
+        {/* Truck type */}
         {form.vehicleType === VehicleType.TRUCK && (
           <div className="space-y-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de camión</label>
+              <label className="block text-[12.5px] font-bold text-zipi-ink mb-2">Tipo de camión</label>
               <div className="grid grid-cols-2 gap-2">
                 {TRUCK_TYPES.map((t) => (
                   <button
                     key={t.value}
                     onClick={() => setForm({ ...form, truckType: t.value })}
-                    className={`flex items-center justify-between p-3 rounded-xl border-2 transition-colors ${
-                      form.truckType === t.value ? 'border-amber-400 bg-amber-50' : 'border-gray-200'
-                    }`}
+                    className="flex items-center justify-between p-3 rounded-[13px] border-2 transition-colors"
+                    style={
+                      form.truckType === t.value
+                        ? { borderColor: '#0E9E6E', background: 'rgba(14,158,110,0.08)' }
+                        : { borderColor: '#ebe7df' }
+                    }
                   >
-                    <span className="text-sm font-medium">{t.label}</span>
-                    <span className="text-xs text-gray-500">{t.desc}</span>
+                    <span className="text-[13px] font-bold text-zipi-ink">{t.label}</span>
+                    <span className="text-[11px] text-zipi-faint">{t.desc}</span>
                   </button>
                 ))}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Capacidad (toneladas)</label>
+                <label className="block text-[12.5px] font-bold text-zipi-ink mb-1.5">Capacidad (ton)</label>
                 <input
                   type="number"
                   className="input"
@@ -185,29 +208,33 @@ export default function DriverProfile() {
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    className="w-4 h-4 accent-blue-500"
+                    className="w-4 h-4"
+                    style={{ accentColor: '#2F6BEC' }}
                     checked={form.hasRefrigeration}
                     onChange={(e) => setForm({ ...form, hasRefrigeration: e.target.checked })}
                   />
-                  <span className="text-sm text-gray-700">🧊 Tiene refrigeración</span>
+                  <span className="text-[13.5px] font-semibold text-zipi-ink">Refrigeración</span>
                 </label>
               </div>
             </div>
           </div>
         )}
 
-        {/* Extra fields for machinery */}
+        {/* Machinery type */}
         {form.vehicleType === VehicleType.HEAVY_MACHINERY && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de maquinaria</label>
+            <label className="block text-[12.5px] font-bold text-zipi-ink mb-2">Tipo de maquinaria</label>
             <div className="grid grid-cols-2 gap-2">
               {MACHINERY_TYPES.map((m) => (
                 <button
                   key={m.value}
                   onClick={() => setForm({ ...form, machineryType: m.value })}
-                  className={`p-3 rounded-xl border-2 text-sm font-medium transition-colors ${
-                    form.machineryType === m.value ? 'border-orange-400 bg-orange-50 text-orange-700' : 'border-gray-200 text-gray-700'
-                  }`}
+                  className="p-3 rounded-[13px] border-2 text-[13px] font-bold transition-colors text-left"
+                  style={
+                    form.machineryType === m.value
+                      ? { borderColor: '#C77A00', background: 'rgba(239,144,8,0.08)', color: '#C77A00' }
+                      : { borderColor: '#ebe7df', color: '#1a1714' }
+                  }
                 >
                   {m.label}
                 </button>
@@ -216,9 +243,10 @@ export default function DriverProfile() {
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-4">
+        {/* Vehicle details */}
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Patente</label>
+            <label className="block text-[12.5px] font-bold text-zipi-ink mb-1.5">Patente</label>
             <input
               className="input"
               placeholder="AB123CD"
@@ -227,7 +255,7 @@ export default function DriverProfile() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Año</label>
+            <label className="block text-[12.5px] font-bold text-zipi-ink mb-1.5">Año</label>
             <input
               type="number"
               className="input"
@@ -240,7 +268,7 @@ export default function DriverProfile() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Modelo</label>
+          <label className="block text-[12.5px] font-bold text-zipi-ink mb-1.5">Modelo</label>
           <input
             className="input"
             placeholder="Ej: Toyota Corolla / Honda CB 190"
@@ -250,7 +278,7 @@ export default function DriverProfile() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Color</label>
+          <label className="block text-[12.5px] font-bold text-zipi-ink mb-1.5">Color</label>
           <input
             className="input"
             placeholder="Blanco, Negro, Rojo..."
@@ -260,7 +288,7 @@ export default function DriverProfile() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Número de licencia</label>
+          <label className="block text-[12.5px] font-bold text-zipi-ink mb-1.5">Número de licencia</label>
           <input
             className="input"
             placeholder="LIC-XXXXXX"
@@ -272,7 +300,8 @@ export default function DriverProfile() {
         <button
           onClick={() => createProfile.mutate()}
           disabled={createProfile.isPending || !form.vehiclePlate || !form.vehicleModel || !form.licenseNumber}
-          className="btn-primary w-full"
+          className="h-[54px] w-full rounded-2xl font-bold text-white transition-opacity disabled:opacity-50"
+          style={{ background: '#1A1714' }}
         >
           {createProfile.isPending ? 'Guardando...' : 'Guardar perfil'}
         </button>
