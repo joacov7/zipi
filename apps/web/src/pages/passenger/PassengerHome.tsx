@@ -1,8 +1,9 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/auth.store';
-import { Car, Package, Truck, Wrench, Users, Gift, Search, ChevronRight, Clock } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api';
+import { DuoIcon } from '../../components/ui/DuoIcon';
 
 const SERVICES = [
   {
@@ -10,7 +11,7 @@ const SERVICES = [
     name: 'Pedir Remis',
     tagline: 'Viajá cómodo con conductores verificados',
     from: 2500,
-    icon: Car,
+    iconName: 'car',
     accent: '#EF9008',
     tint: 'rgba(239,144,8,0.12)',
     to: '/request-trip',
@@ -20,7 +21,7 @@ const SERVICES = [
     name: 'Motomandado',
     tagline: 'Enviá paquetes y documentos en moto',
     from: 1500,
-    icon: Package,
+    iconName: 'package',
     accent: '#2F6BEC',
     tint: 'rgba(47,107,236,0.12)',
     to: '/request-delivery',
@@ -30,7 +31,7 @@ const SERVICES = [
     name: 'Fletes y Maquinaria',
     tagline: 'Camiones, excavadoras, grúas y más',
     from: 8000,
-    icon: Truck,
+    iconName: 'truck',
     accent: '#0E9E6E',
     tint: 'rgba(14,158,110,0.12)',
     to: '/request-freight',
@@ -40,7 +41,7 @@ const SERVICES = [
     name: 'Servicios del Hogar',
     tagline: 'Plomeros, electricistas, pintores y más',
     from: null,
-    icon: Wrench,
+    iconName: 'wrench',
     accent: '#6D5AE0',
     tint: 'rgba(109,90,224,0.12)',
     to: '/services',
@@ -49,7 +50,7 @@ const SERVICES = [
 
 const STATUS_COLORS: Record<string, string> = {
   COMPLETED: 'text-[#0E9E6E]',
-  CANCELLED: 'text-red-500',
+  CANCELLED: 'text-[#E03E63]',
   IN_PROGRESS: 'text-[#2F6BEC]',
 };
 const STATUS_LABELS: Record<string, string> = {
@@ -86,8 +87,8 @@ export default function PassengerHome() {
         className="block relative rounded-[22px] overflow-hidden p-5"
         style={{
           background:
-            'linear-gradient(140deg, rgba(255,255,255,0.14), rgba(0,0,0,0.05) 42%, rgba(0,0,0,0.30)), #1A1714',
-          boxShadow: '0 16px 34px -18px rgba(26,23,20,0.6)',
+            'linear-gradient(140deg, rgba(255,255,255,0.14), rgba(0,0,0,0.05) 42%, rgba(0,0,0,0.30)), #EF9008',
+          boxShadow: '0 16px 34px -18px rgba(239,144,8,0.7)',
         }}
       >
         <div className="relative z-10">
@@ -98,12 +99,17 @@ export default function PassengerHome() {
             ¿A dónde vamos?
           </p>
           <div className="inline-flex items-center gap-2.5 bg-white rounded-[13px] px-4 py-3 text-[15px] font-bold text-zipi-ink shadow-lg">
-            <Search size={19} className="text-zipi-500" strokeWidth={2.2} />
+            <span style={{ color: '#EF9008' }}>
+              <DuoIcon name="search" size={19} stroke={2.2} />
+            </span>
             Buscar destino
           </div>
         </div>
-        <div className="absolute right-[-16px] bottom-[-20px] text-white/[0.1] pointer-events-none">
-          <Car size={142} strokeWidth={1.5} />
+        <div
+          className="absolute right-[-16px] bottom-[-20px] pointer-events-none"
+          style={{ color: 'rgba(255,255,255,0.14)' }}
+        >
+          <DuoIcon name="car" size={142} stroke={1.5} />
         </div>
       </Link>
 
@@ -113,42 +119,39 @@ export default function PassengerHome() {
           <h2 className="text-[17px] font-bold text-zipi-ink tracking-tight">Nuestros servicios</h2>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          {SERVICES.map((s) => {
-            const Icon = s.icon;
-            return (
-              <Link
-                key={s.id}
-                to={s.to}
-                className="bg-white border border-zipi-rim rounded-[22px] p-[15px] shadow-zipi hover:shadow-md transition-shadow block"
+          {SERVICES.map((s) => (
+            <Link
+              key={s.id}
+              to={s.to}
+              className="bg-white border border-zipi-rim rounded-[22px] p-[15px] shadow-zipi hover:shadow-md transition-shadow block"
+            >
+              <div
+                className="w-[52px] h-[52px] rounded-[15px] flex items-center justify-center mb-3"
+                style={{ background: s.tint, color: s.accent }}
               >
-                <div
-                  className="w-[52px] h-[52px] rounded-[15px] flex items-center justify-center mb-3"
-                  style={{ background: s.tint, color: s.accent }}
-                >
-                  <Icon size={26} strokeWidth={2} />
-                </div>
-                <p
-                  className="text-[15.5px] font-bold text-zipi-ink leading-tight mb-1"
-                  style={{ letterSpacing: '-0.01em' }}
-                >
-                  {s.name}
+                <DuoIcon name={s.iconName} size={26} stroke={2} />
+              </div>
+              <p
+                className="text-[15.5px] font-bold text-zipi-ink leading-tight mb-1"
+                style={{ letterSpacing: '-0.01em', minHeight: 40 }}
+              >
+                {s.name}
+              </p>
+              <p className="text-[12.5px] text-zipi-muted leading-snug mb-2">{s.tagline}</p>
+              {s.from ? (
+                <p className="text-[12.5px] font-bold" style={{ color: s.accent }}>
+                  Desde ${s.from.toLocaleString('es-AR')}
                 </p>
-                <p className="text-[12.5px] text-zipi-muted leading-snug mb-2">{s.tagline}</p>
-                {s.from ? (
-                  <p className="text-[12.5px] font-bold" style={{ color: s.accent }}>
-                    Desde ${s.from.toLocaleString('es-AR')}
-                  </p>
-                ) : (
-                  <p
-                    className="text-[12.5px] font-bold flex items-center gap-1"
-                    style={{ color: s.accent }}
-                  >
-                    Pedí presupuesto <ChevronRight size={13} strokeWidth={2.4} />
-                  </p>
-                )}
-              </Link>
-            );
-          })}
+              ) : (
+                <p
+                  className="text-[12.5px] font-bold flex items-center gap-1"
+                  style={{ color: s.accent }}
+                >
+                  Pedí presupuesto <ChevronRight size={13} strokeWidth={2.4} />
+                </p>
+              )}
+            </Link>
+          ))}
         </div>
       </div>
 
@@ -159,9 +162,9 @@ export default function PassengerHome() {
       >
         <div
           className="w-[46px] h-[46px] rounded-[13px] flex items-center justify-center shrink-0"
-          style={{ background: 'rgba(26,23,20,0.08)', color: '#1A1714' }}
+          style={{ background: 'rgba(239,144,8,0.12)', color: '#EF9008' }}
         >
-          <Users size={24} strokeWidth={2} />
+          <DuoIcon name="users" size={24} stroke={2} />
         </div>
         <div className="flex-1">
           <p className="text-[15px] font-bold text-zipi-ink">Viajes compartidos</p>
@@ -169,26 +172,23 @@ export default function PassengerHome() {
         </div>
         <span
           className="text-[11px] font-bold rounded-full px-2.5 py-1 shrink-0"
-          style={{ background: 'rgba(26,23,20,0.08)', color: '#1A1714' }}
+          style={{ background: 'rgba(239,144,8,0.12)', color: '#EF9008' }}
         >
           Nuevo
         </span>
       </Link>
 
-      {/* Wallet / referral promo */}
+      {/* Referral promo */}
       <button
         onClick={() => navigate('/referral')}
         className="w-full flex items-center gap-3 rounded-[22px] p-4 text-left hover:opacity-90 transition-opacity"
-        style={{
-          background: '#FDF6E8',
-          border: '1px solid #F7E4BC',
-        }}
+        style={{ background: '#FDF6E8', border: '1px solid #F7E4BC' }}
       >
         <div
           className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
           style={{ background: '#EF9008', color: '#fff' }}
         >
-          <Gift size={23} strokeWidth={2} />
+          <DuoIcon name="gift" size={23} stroke={2} />
         </div>
         <div className="flex-1">
           <p className="text-[14.5px] font-bold text-zipi-ink">Invitá y ganá $3.000</p>
@@ -208,7 +208,9 @@ export default function PassengerHome() {
 
         {recentTrips.length === 0 ? (
           <div className="text-center py-10">
-            <Clock size={40} className="text-zipi-faint mx-auto mb-3 opacity-60" strokeWidth={1.6} />
+            <div className="mx-auto mb-3 w-fit opacity-60" style={{ color: '#a39e95' }}>
+              <DuoIcon name="clock" size={40} stroke={1.6} fillOpacity={0.1} />
+            </div>
             <p className="text-[15px] font-bold text-zipi-muted">Aún no tenés viajes</p>
             <p className="text-[13px] text-zipi-faint mt-1">¡Pedí tu primer remis o mandado!</p>
           </div>
@@ -227,7 +229,7 @@ export default function PassengerHome() {
                     className="w-11 h-11 rounded-[13px] flex items-center justify-center shrink-0"
                     style={{ background: 'rgba(239,144,8,0.1)', color: '#EF9008' }}
                   >
-                    <Car size={21} strokeWidth={2} />
+                    <DuoIcon name="car" size={21} stroke={2} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[14.5px] font-bold text-zipi-ink truncate">

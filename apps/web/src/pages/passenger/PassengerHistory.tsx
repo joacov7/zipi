@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api';
-import { Car, Package, Star, MapPin, Navigation, Receipt, X, Clock, ChevronDown } from 'lucide-react';
+import { Star, MapPin, Navigation, Receipt, X } from 'lucide-react';
+import { DuoIcon } from '../../components/ui/DuoIcon';
 
 type Filter = 'all' | 'trips' | 'deliveries';
 
@@ -97,7 +98,7 @@ function TripReceiptModal({ trip, onClose }: { trip: any; onClose: () => void })
             </div>
             {trip.distanceKm && (
               <p className="text-[11.5px] text-zipi-faint flex items-center gap-1 pt-1">
-                <Clock size={11} />
+                <DuoIcon name="clock" size={11} />
                 {trip.distanceKm} km · {trip.estimatedMinutes} min
               </p>
             )}
@@ -247,7 +248,9 @@ export default function PassengerHistory() {
       {/* Grouped list */}
       {groups.length === 0 ? (
         <div className="text-center py-14">
-          <Clock size={44} className="text-zipi-faint mx-auto mb-3 opacity-60" strokeWidth={1.6} />
+          <div className="mx-auto mb-3 w-fit opacity-60" style={{ color: '#a39e95' }}>
+              <DuoIcon name="clock" size={44} stroke={1.6} fillOpacity={0.1} />
+            </div>
           <p className="text-[15px] font-bold text-zipi-muted">Sin actividad todavía</p>
         </div>
       ) : (
@@ -278,9 +281,9 @@ export default function PassengerHistory() {
                         }
                       >
                         {isTrip ? (
-                          <Car size={22} strokeWidth={2} />
+                          <DuoIcon name="car" size={22} stroke={2} />
                         ) : (
-                          <Package size={22} strokeWidth={2} />
+                          <DuoIcon name="package" size={22} stroke={2} />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">

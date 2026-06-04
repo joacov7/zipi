@@ -4,6 +4,20 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { ServiceUrgency } from '@zipi/shared';
 import { ChevronLeft, Info } from 'lucide-react';
+import { DuoIcon } from '../../components/ui/DuoIcon';
+
+function getCategoryIcon(name: string): string | null {
+  const lower = name.toLowerCase();
+  if (lower.includes('plom')) return 'wrench';
+  if (lower.includes('electric')) return 'bolt';
+  if (lower.includes('pintu') || lower.includes('pintor')) return 'roller';
+  if (lower.includes('cerr')) return 'key';
+  if (lower.includes('gas') || lower.includes('gasist')) return 'flame';
+  if (lower.includes('aire') || lower.includes('climat')) return 'wind';
+  if (lower.includes('carpint')) return 'hammer';
+  if (lower.includes('jardin') || lower.includes('paisaj')) return 'leaf';
+  return null;
+}
 
 const URGENCY_OPTIONS = [
   { value: ServiceUrgency.URGENT,   label: 'Urgente',   sub: 'Lo necesito hoy',       bg: 'rgba(224,62,99,0.1)',   border: '#E03E63',  fg: '#E03E63' },
@@ -76,7 +90,11 @@ export default function RequestServicePage() {
                     : { borderColor: '#ebe7df', color: '#6b6760' }
                 }
               >
-                <span className="text-[18px]">{cat.icon}</span>
+                {getCategoryIcon(cat.name) ? (
+                  <DuoIcon name={getCategoryIcon(cat.name)!} size={18} stroke={2} />
+                ) : (
+                  <span className="text-[18px]">{cat.icon}</span>
+                )}
                 {cat.name}
               </button>
             ))}
@@ -154,7 +172,7 @@ export default function RequestServicePage() {
             !form.address
           }
           className="h-[54px] w-full rounded-2xl font-bold text-white transition-opacity disabled:opacity-50"
-          style={{ background: '#1A1714' }}
+          style={{ background: '#6D5AE0' }}
         >
           {createRequest.isPending ? 'Publicando...' : 'Publicar solicitud'}
         </button>

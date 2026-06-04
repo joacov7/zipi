@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { useAuthStore } from '../../stores/auth.store';
-import { Check, Copy, ChevronRight, Car, User, MapPin, CreditCard, Shield, Bell, MessageCircle, Gift } from 'lucide-react';
+import { Check, Copy, ChevronRight } from 'lucide-react';
+import { DuoIcon } from '../../components/ui/DuoIcon';
 
 function Stars({ value }: { value?: number }) {
   const full = Math.round(value ?? 0);
@@ -17,14 +18,14 @@ function Stars({ value }: { value?: number }) {
 
 const MENU_GROUPS = [
   [
-    { icon: User, label: 'Datos personales' },
-    { icon: MapPin, label: 'Mis direcciones' },
-    { icon: CreditCard, label: 'Medios de pago' },
+    { icon: 'user', label: 'Datos personales' },
+    { icon: 'pin', label: 'Mis direcciones' },
+    { icon: 'card', label: 'Medios de pago' },
   ],
   [
-    { icon: Shield, label: 'Seguridad y privacidad' },
-    { icon: Bell, label: 'Notificaciones' },
-    { icon: MessageCircle, label: 'Ayuda y soporte' },
+    { icon: 'shield', label: 'Seguridad y privacidad' },
+    { icon: 'bell', label: 'Notificaciones' },
+    { icon: 'message', label: 'Ayuda y soporte' },
   ],
 ];
 
@@ -141,7 +142,7 @@ export default function ProfilePage() {
           className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
           style={{ background: 'rgba(255,255,255,0.14)', color: '#fff' }}
         >
-          <Car size={23} strokeWidth={2} />
+          <DuoIcon name="car" size={23} stroke={2} />
         </div>
         <div className="flex-1">
           <p className="text-[15px] font-extrabold" style={{ color: '#f4f2ee' }}>
@@ -176,7 +177,7 @@ export default function ProfilePage() {
           key={gi}
           className="bg-white border border-zipi-rim rounded-[22px] overflow-hidden shadow-zipi mb-3.5"
         >
-          {rows.map(({ icon: Icon, label }, i) => (
+          {rows.map(({ icon, label }, i) => (
             <button
               key={label}
               className={`w-full flex items-center gap-3 px-4 py-[15px] hover:bg-zipi-surface2 transition-colors ${
@@ -184,7 +185,7 @@ export default function ProfilePage() {
               }`}
             >
               <span className="text-zipi-muted">
-                <Icon size={21} />
+                <DuoIcon name={icon} size={21} />
               </span>
               <span className="flex-1 text-left text-[14.5px] font-semibold text-zipi-ink">
                 {label}
@@ -199,7 +200,7 @@ export default function ProfilePage() {
       {user?.referralCode && (
         <div className="bg-white border border-zipi-rim rounded-[22px] p-[18px] shadow-zipi mb-3.5">
           <div className="flex items-center gap-2.5 mb-3">
-            <Gift size={18} className="text-zipi-500" />
+            <DuoIcon name="gift" size={18} style={{ color: '#EF9008' }} />
             <p className="text-[14px] font-bold text-zipi-ink">Tu código de referido</p>
           </div>
           <div className="flex items-center gap-3 bg-zipi-surface2 rounded-[13px] p-3">

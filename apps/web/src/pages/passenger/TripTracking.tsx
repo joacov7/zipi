@@ -4,7 +4,8 @@ import { api } from '../../lib/api';
 import { useEffect, useState, lazy, Suspense } from 'react';
 import { getSocket } from '../../lib/socket';
 import { SocketEvent } from '@zipi/shared';
-import { Phone, Star, MapPin, Car, Clock, AlertTriangle, ShieldAlert, Receipt, Navigation } from 'lucide-react';
+import { Star, MapPin, AlertTriangle, ShieldAlert, Receipt, Navigation } from 'lucide-react';
+import { DuoIcon } from '../../components/ui/DuoIcon';
 import TripChat from '../../components/chat/TripChat';
 import { CANCELLATION_FEE_AFTER_ACCEPT } from '@zipi/shared';
 
@@ -89,6 +90,10 @@ export default function TripTracking() {
 
   const statusMeta = STATUS_META[trip.status] ?? STATUS_META.PENDING;
 
+  const STATUS_STEPS = ['PENDING', 'ACCEPTED', 'IN_PROGRESS', 'COMPLETED'];
+  const STATUS_STEP_LABELS = ['Buscando', 'En camino', 'En viaje', 'Llegaste'];
+  const stepIndex = trip.status === 'CANCELLED' ? -1 : STATUS_STEPS.indexOf(trip.status);
+
   return (
     <div className="max-w-lg mx-auto">
       <div className="flex items-center justify-between mb-5">
@@ -100,6 +105,32 @@ export default function TripTracking() {
           {statusMeta.label}
         </span>
       </div>
+
+      {/* Status progress bar */}
+      {trip.status !== 'CANCELLED' && (
+        <div className="bg-white border border-zipi-rim rounded-[22px] p-[18px] shadow-zipi mb-4">
+          <div className="flex items-center justify-between mb-2.5">
+            {STATUS_STEP_LABELS.map((label, i) => (
+              <span
+                key={i}
+                className="text-[11px] font-bold"
+                style={{ color: i <= stepIndex ? '#EF9008' : '#a39e95' }}
+              >
+                {label}
+              </span>
+            ))}
+          </div>
+          <div className="h-1.5 bg-zipi-rim rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{
+                width: stepIndex < 0 ? '5%' : `${Math.max(5, (stepIndex / (STATUS_STEPS.length - 1)) * 100)}%`,
+                background: '#EF9008',
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Map */}
       {trip.originLat && trip.destLat && (
@@ -129,7 +160,7 @@ export default function TripTracking() {
             className="animate-bounce w-[60px] h-[60px] rounded-full flex items-center justify-center mx-auto mb-3"
             style={{ background: 'rgba(239,144,8,0.12)' }}
           >
-            <Car size={30} style={{ color: '#EF9008' }} />
+            <DuoIcon name="car" size={30} stroke={2} style={{ color: '#EF9008' }} />
           </div>
           <p className="text-[15px] font-bold text-zipi-ink">Buscando tu conductor...</p>
           <p className="text-[13px] text-zipi-muted mt-1">En unos momentos alguien aceptará tu viaje</p>
@@ -160,7 +191,7 @@ export default function TripTracking() {
               className="w-11 h-11 rounded-full flex items-center justify-center transition-colors"
               style={{ background: 'rgba(14,158,110,0.12)' }}
             >
-              <Phone size={19} style={{ color: '#0E9E6E' }} />
+              <DuoIcon name="phone" size={19} style={{ color: '#0E9E6E' }} />
             </a>
           </div>
         </div>
@@ -187,7 +218,7 @@ export default function TripTracking() {
         </div>
         {trip.estimatedMinutes && (
           <div className="flex items-center gap-1.5 text-[12.5px] text-zipi-muted pt-2 border-t border-zipi-rim">
-            <Clock size={12} />
+            <DuoIcon name="clock" size={12} />
             <span>~{trip.estimatedMinutes} min · {trip.distanceKm} km</span>
           </div>
         )}
@@ -329,7 +360,7 @@ export default function TripTracking() {
                   onClick={() => rateMutation.mutate(selectedRating)}
                   disabled={rateMutation.isPending}
                   className="h-[50px] w-full rounded-2xl font-bold text-white disabled:opacity-50"
-                  style={{ background: '#1A1714' }}
+                  style={{ background: '#EF9008' }}
                 >
                   {rateMutation.isPending ? 'Enviando...' : `Calificar con ${selectedRating} ⭐`}
                 </button>

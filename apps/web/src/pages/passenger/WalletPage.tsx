@@ -1,13 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { useAuthStore } from '../../stores/auth.store';
-import { Plus, Send, CreditCard, Wallet, Gift, ArrowUpCircle, ArrowDownCircle, Settings } from 'lucide-react';
+import { Send } from 'lucide-react';
+import { DuoIcon } from '../../components/ui/DuoIcon';
 
-const TX_ICON: Record<string, any> = {
-  CREDIT:           ArrowUpCircle,
-  DEBIT:            ArrowDownCircle,
-  REFERRAL_BONUS:   Gift,
-  ADMIN_ADJUSTMENT: Settings,
+const TX_ICON_NAME: Record<string, string> = {
+  CREDIT:           'plus',
+  DEBIT:            'activity',
+  REFERRAL_BONUS:   'gift',
+  ADMIN_ADJUSTMENT: 'sliders',
 };
 
 export default function WalletPage() {
@@ -51,22 +52,22 @@ export default function WalletPage() {
           <span className="text-[14px] font-extrabold tracking-[0.06em]">ZIPI</span>
         </div>
         <div className="absolute right-[-24px] top-[-24px] pointer-events-none" style={{ color: 'rgba(255,255,255,0.12)' }}>
-          <Wallet size={120} strokeWidth={1.4} />
+          <DuoIcon name="wallet" size={120} stroke={1.4} fillOpacity={0.18} />
         </div>
       </div>
 
       {/* Quick actions */}
       <div className="flex gap-3 mb-6">
         {[
-          { icon: Plus, label: 'Cargar saldo' },
-          { icon: Send, label: 'Enviar' },
-        ].map(({ icon: Icon, label }) => (
+          { label: 'Cargar saldo', duo: 'plus' as const },
+          { label: 'Enviar', lucide: Send },
+        ].map(({ label, duo, lucide: Icon }) => (
           <button
             key={label}
             className="flex-1 flex items-center justify-center gap-2 h-[50px] rounded-[14px] bg-white border border-zipi-rim text-[14.5px] font-bold text-zipi-ink shadow-zipi hover:shadow-md transition-shadow"
           >
-            <span className="text-zipi-500">
-              <Icon size={19} strokeWidth={2.2} />
+            <span style={{ color: '#EF9008' }}>
+              {duo ? <DuoIcon name={duo} size={19} stroke={2.2} /> : Icon ? <Icon size={19} strokeWidth={2.2} /> : null}
             </span>
             {label}
           </button>
@@ -80,16 +81,16 @@ export default function WalletPage() {
       </div>
       <div className="flex flex-col gap-2.5 mb-6">
         {[
-          { icon: CreditCard, name: 'Visa ···· 4821', tag: 'Predeterminada' },
-          { icon: Wallet, name: 'Efectivo', tag: '' },
-          { icon: CreditCard, name: 'Mastercard ···· 1190', tag: '' },
-        ].map(({ icon: Icon, name, tag }, i) => (
+          { iconName: 'card', name: 'Visa ···· 4821', tag: 'Predeterminada' },
+          { iconName: 'wallet', name: 'Efectivo', tag: '' },
+          { iconName: 'card', name: 'Mastercard ···· 1190', tag: '' },
+        ].map(({ iconName, name, tag }, i) => (
           <div
             key={i}
             className="flex items-center gap-3 bg-white border border-zipi-rim rounded-[16px] p-3.5"
           >
             <div className="w-[42px] h-[42px] rounded-[11px] bg-zipi-surface2 flex items-center justify-center text-zipi-ink">
-              <Icon size={21} />
+              <DuoIcon name={iconName} size={21} />
             </div>
             <p className="flex-1 text-[14.5px] font-bold text-zipi-ink">{name}</p>
             {tag && (
@@ -117,7 +118,7 @@ export default function WalletPage() {
         )}
         {txs.map((tx: any, i: number) => {
           const pos = tx.amount > 0;
-          const Icon = TX_ICON[tx.type] ?? ArrowUpCircle;
+          const iconName = TX_ICON_NAME[tx.type] ?? 'activity';
           return (
             <div
               key={tx.id}
@@ -130,7 +131,7 @@ export default function WalletPage() {
                   color: pos ? '#0E9E6E' : '#6b6760',
                 }}
               >
-                <Icon size={19} />
+                <DuoIcon name={iconName} size={19} />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[14px] font-bold text-zipi-ink truncate">{tx.description}</p>
