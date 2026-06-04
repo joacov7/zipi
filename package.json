@@ -4,6 +4,7 @@
   "private": true,
   "description": "Zipi - Servicio de remisería y motomandado",
   "scripts": {
+    "preinstall": "npx only-allow pnpm",
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
