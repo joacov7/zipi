@@ -3,7 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { useAuthStore } from '../../stores/auth.store';
 import { Link } from 'react-router-dom';
-import { Clock, Users, Plus, X, Check } from 'lucide-react';
+import { Plus, X, Check } from 'lucide-react';
+import { DuoIcon } from '../../components/ui/DuoIcon';
 
 interface Participant {
   id: string;
@@ -115,11 +116,11 @@ function TripCard({ trip, userId }: { trip: SharedTrip; userId: string }) {
       {/* Meta */}
       <div className="flex items-center gap-4 pt-3 border-t border-zipi-rim text-[12.5px] text-zipi-muted">
         <span className="flex items-center gap-1.5">
-          <Clock size={14} className="opacity-60" />
+          <DuoIcon name="clock" size={14} />
           {when}
         </span>
         <span className="flex items-center gap-1.5">
-          <Users size={14} className="opacity-60" />
+          <DuoIcon name="users" size={14} />
           {seatsLeft} libre{seatsLeft !== 1 ? 's' : ''}
         </span>
       </div>
@@ -139,7 +140,7 @@ function TripCard({ trip, userId }: { trip: SharedTrip; userId: string }) {
                 joinMutation.mutate();
               }}
               disabled={joinMutation.isPending}
-              className="text-[12.5px] font-bold text-white bg-zipi-ink rounded-full px-3.5 py-[7px] hover:opacity-80 transition-opacity disabled:opacity-50"
+              className="text-[12.5px] font-bold text-white bg-zipi-500 rounded-full px-3.5 py-[7px] hover:opacity-80 transition-opacity disabled:opacity-50"
             >
               {joinMutation.isPending ? '...' : 'Solicitar lugar'}
             </button>
@@ -198,7 +199,7 @@ function PublishSheet({ onClose }: { onClose: () => void }) {
             </p>
             <button
               onClick={onClose}
-              className="h-[54px] w-full rounded-2xl font-bold text-white bg-zipi-ink hover:opacity-90 transition-opacity"
+              className="h-[54px] w-full rounded-2xl font-bold text-white bg-zipi-500 hover:opacity-90 transition-opacity"
             >
               Listo
             </button>
@@ -288,7 +289,7 @@ function PublishSheet({ onClose }: { onClose: () => void }) {
                     border: '1px solid rgba(239,144,8,0.25)',
                   }}
                 >
-                  <Users size={20} className="text-zipi-500 shrink-0 opacity-70" />
+                  <DuoIcon name="users" size={20} className="text-zipi-500 shrink-0" />
                   <span className="flex-1 text-[13.5px] text-zipi-muted">Cada pasajero paga</span>
                   <span className="text-[17px] font-extrabold text-zipi-500">
                     ${costPerSeat.toLocaleString('es-AR')}
@@ -326,7 +327,7 @@ function PublishSheet({ onClose }: { onClose: () => void }) {
                   !form.departureTime ||
                   form.totalCost <= 0
                 }
-                className="h-[54px] flex-1 rounded-2xl font-bold text-white bg-zipi-ink hover:opacity-90 transition-opacity disabled:opacity-40"
+                className="h-[54px] flex-1 rounded-2xl font-bold text-white bg-zipi-500 hover:opacity-90 transition-opacity disabled:opacity-40"
               >
                 {mutation.isPending ? 'Publicando...' : 'Publicar viaje'}
               </button>
@@ -371,7 +372,7 @@ export default function SharedTripsPage() {
         </h1>
         <button
           onClick={() => setShowPublish(true)}
-          className="flex items-center gap-1.5 h-10 px-3.5 rounded-xl bg-zipi-ink text-white text-[13.5px] font-bold hover:opacity-90 transition-opacity shrink-0 mt-1"
+          className="flex items-center gap-1.5 h-10 px-3.5 rounded-xl bg-zipi-500 text-white text-[13.5px] font-bold hover:opacity-90 transition-opacity shrink-0 mt-1"
         >
           <Plus size={17} strokeWidth={2.4} />
           Publicar
@@ -401,12 +402,12 @@ export default function SharedTripsPage() {
       {/* Content */}
       {loading ? (
         <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-zipi-ink" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-zipi-500" />
         </div>
       ) : displayTrips.length === 0 ? (
         <div className="text-center py-14">
-          <div className="flex justify-center mb-3 text-zipi-faint opacity-60">
-            <Users size={44} strokeWidth={1.6} />
+          <div className="flex justify-center mb-3 text-zipi-faint">
+            <DuoIcon name="users" size={44} stroke={1.6} fillOpacity={0.1} />
           </div>
           <p className="text-[15px] font-bold text-zipi-muted">
             {tab === 'all' ? 'No hay viajes disponibles' : 'No tenés viajes todavía'}

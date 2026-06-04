@@ -2,7 +2,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { useAuthStore } from '../../stores/auth.store';
-import { Calendar, Users, Phone, Check, X, ArrowLeft, Trash2 } from 'lucide-react';
+import { Check, X, ArrowLeft, Trash2 } from 'lucide-react';
+import { DuoIcon } from '../../components/ui/DuoIcon';
 
 function Avatar({ name, size = 32 }: { name: string; size?: number }) {
   return (
@@ -71,7 +72,7 @@ export default function SharedTripDetailPage() {
   if (isLoading) {
     return (
       <div className="flex justify-center py-20">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-zipi-ink" />
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-zipi-500" />
       </div>
     );
   }
@@ -163,11 +164,11 @@ export default function SharedTripDetailPage() {
         {/* Meta */}
         <div className="flex items-center gap-[18px] mt-4 pt-3.5 border-t border-zipi-rim text-[13px] text-zipi-muted">
           <span className="flex items-center gap-1.5">
-            <Calendar size={16} className="opacity-60" />
+            <DuoIcon name="calendar" size={16} />
             {whenFull}
           </span>
           <span className="flex items-center gap-1.5 shrink-0">
-            <Users size={16} className="opacity-60" />
+            <DuoIcon name="users" size={16} />
             {seatsLeft} libre{seatsLeft !== 1 ? 's' : ''}
           </span>
         </div>
@@ -215,7 +216,7 @@ export default function SharedTripDetailPage() {
               className="w-11 h-11 rounded-full flex items-center justify-center hover:opacity-80 transition-opacity"
               style={{ background: 'rgba(239,144,8,0.12)', color: '#ef9008' }}
             >
-              <Phone size={19} />
+              <DuoIcon name="phone" size={19} />
             </a>
           )}
         </div>
