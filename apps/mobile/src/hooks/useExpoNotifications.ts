@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
-import { api } from '../lib/api';
+import { api } from '../services/api';
 import { useAuthStore } from '../stores/auth.store';
 
 Notifications.setNotificationHandler({
