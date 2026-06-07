@@ -13,7 +13,10 @@ COPY packages/shared ./packages/shared
 COPY apps/api ./apps/api
 
 WORKDIR /app
-RUN pnpm --filter api prisma:generate && pnpm --filter api build && echo "=== dist ===" && ls apps/api/dist/
+RUN pnpm --filter api prisma:generate && \
+    pnpm --filter api build && \
+    find /app -name "main.js" 2>/dev/null && \
+    echo "=== BUILD DONE ==="
 
 WORKDIR /app/apps/api
 EXPOSE 4000
