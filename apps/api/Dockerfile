@@ -37,4 +37,4 @@ COPY apps/api/prisma ./apps/api/prisma
 WORKDIR /app/apps/api
 EXPOSE 4000
 
-CMD ["sh", "-c", "npx prisma generate && npx prisma db push && node dist/main"]
+CMD ["sh", "-c", "pnpm exec prisma generate && pnpm exec prisma db push && node dist/main"]
