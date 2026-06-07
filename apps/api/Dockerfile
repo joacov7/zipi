@@ -17,7 +17,7 @@ COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
 COPY packages/shared ./packages/shared
 COPY apps/api ./apps/api
-RUN pnpm --filter api build
+RUN cd apps/api && npx prisma generate && cd /app && pnpm --filter api build
 
 # --- imagen final ---
 FROM node:20-alpine
