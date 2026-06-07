@@ -37,11 +37,15 @@ export function useExpoNotifications() {
         });
       }
 
-      const tokenData = await Notifications.getExpoPushTokenAsync();
-      await api.post('/notifications/token', {
-        token: tokenData.data,
-        platform: 'expo',
-      });
+      try {
+        const tokenData = await Notifications.getExpoPushTokenAsync();
+        await api.post('/notifications/token', {
+          token: tokenData.data,
+          platform: 'expo',
+        });
+      } catch {
+        // Push token unavailable (emulator, no EAS projectId, etc.) — skip silently
+      }
     }
 
     registerPushToken();
