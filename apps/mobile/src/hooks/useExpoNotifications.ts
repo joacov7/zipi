@@ -1,22 +1,27 @@
 import { useEffect } from 'react';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 import { api } from '../services/api';
 import { useAuthStore } from '../stores/auth.store';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
+const isExpoGo = Constants.appOwnership === 'expo';
+
+if (!isExpoGo) {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+    }),
+  });
+}
 
 export function useExpoNotifications() {
   const { user } = useAuthStore();
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || isExpoGo) return;
 
     async function registerPushToken() {
       const { status: existing } = await Notifications.getPermissionsAsync();
@@ -44,7 +49,7 @@ export function useExpoNotifications() {
           platform: 'expo',
         });
       } catch {
-        // Push token unavailable (emulator, no EAS projectId, etc.) — skip silently
+        // Push token unavailable — skip silently
       }
     }
 
