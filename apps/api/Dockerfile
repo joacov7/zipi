@@ -34,8 +34,9 @@ RUN pnpm install --frozen-lockfile
 COPY packages/shared ./packages/shared
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY apps/api/prisma ./apps/api/prisma
+COPY apps/api/tsconfig.json ./apps/api/tsconfig.json
 
 WORKDIR /app/apps/api
 EXPOSE 4000
 
-CMD ["sh", "-c", "prisma generate && prisma db push && ts-node prisma/seed.ts && node dist/main"]
+CMD ["sh", "-c", "prisma generate && prisma db push && ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts && node dist/main"]
