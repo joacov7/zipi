@@ -182,7 +182,7 @@ export default function TripTracking() {
               <p className="text-[16px] font-bold text-zipi-ink">{trip.driver.user.name}</p>
               <p className="text-[12.5px] text-zipi-muted">{trip.driver.vehicleModel} · {trip.driver.vehiclePlate}</p>
               <div className="flex items-center gap-1 mt-0.5">
-                <Star size={12} className="text-amber-400 fill-amber-400" />
+                <DuoIcon name="star" size={12} style={{ color: '#F5A623' }} fillOpacity={1} />
                 <span className="text-[12px] font-semibold text-zipi-ink">{trip.driver.rating?.toFixed(1)}</span>
               </div>
             </div>
@@ -340,7 +340,7 @@ export default function TripTracking() {
               className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3"
               style={{ background: 'rgba(14,158,110,0.12)' }}
             >
-              <span className="text-[28px]">🎉</span>
+              <DuoIcon name="check" size={30} style={{ color: '#0E9E6E' }} />
             </div>
             <p className="text-[18px] font-extrabold text-zipi-ink">¡Llegaste!</p>
             <p className="text-[13.5px] text-zipi-muted mt-1">
@@ -362,7 +362,7 @@ export default function TripTracking() {
                   className="h-[50px] w-full rounded-2xl font-bold text-white disabled:opacity-50"
                   style={{ background: '#EF9008' }}
                 >
-                  {rateMutation.isPending ? 'Enviando...' : `Calificar con ${selectedRating} ⭐`}
+                  {rateMutation.isPending ? 'Enviando...' : `Calificar con ${selectedRating}`}
                 </button>
               )}
               <button
@@ -374,7 +374,7 @@ export default function TripTracking() {
             </div>
           ) : (
             <div className="space-y-3">
-              <p className="text-[13px] text-zipi-muted">Ya calificaste este viaje con {trip.passengerRating} ⭐</p>
+              <p className="text-[13px] text-zipi-muted">Ya calificaste este viaje con {trip.passengerRating}</p>
               <button
                 onClick={() => navigate('/home')}
                 className="h-[50px] w-full rounded-2xl font-bold text-white"

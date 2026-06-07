@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { useAuthStore } from '../../stores/auth.store';
-import { Check, X, ArrowLeft, Trash2 } from 'lucide-react';
+import { Check, X, Trash2 } from 'lucide-react';
 import { DuoIcon } from '../../components/ui/DuoIcon';
 
 function Avatar({ name, size = 32 }: { name: string; size?: number }) {
@@ -21,9 +21,7 @@ function Stars({ value }: { value?: number }) {
   return (
     <span className="flex gap-px">
       {[1, 2, 3, 4, 5].map((i) => (
-        <span key={i} style={{ fontSize: 12, color: i <= full ? '#EF9008' : '#d4cfc9' }}>
-          ★
-        </span>
+        <DuoIcon key={i} name="star" size={12} style={{ color: i <= full ? '#F5A623' : '#d4cfc9' }} fillOpacity={i <= full ? 1 : 0.3} />
       ))}
     </span>
   );
@@ -114,10 +112,9 @@ export default function SharedTripDetailPage() {
       {/* Back */}
       <button
         onClick={() => navigate('/shared-trips')}
-        className="flex items-center gap-2 text-zipi-muted hover:text-zipi-ink text-[14px] font-medium mb-5 -ml-0.5"
+        className="w-10 h-10 rounded-xl bg-zipi-surface2 flex items-center justify-center mb-5 hover:bg-zipi-rim transition-colors"
       >
-        <ArrowLeft size={18} />
-        Volver
+        <DuoIcon name="arrowLeft" size={21} />
       </button>
 
       {/* Route card */}

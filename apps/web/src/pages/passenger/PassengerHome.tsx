@@ -87,8 +87,8 @@ export default function PassengerHome() {
         className="block relative rounded-[22px] overflow-hidden p-5"
         style={{
           background:
-            'linear-gradient(140deg, rgba(255,255,255,0.14), rgba(0,0,0,0.05) 42%, rgba(0,0,0,0.30)), #EF9008',
-          boxShadow: '0 16px 34px -18px rgba(239,144,8,0.7)',
+            'linear-gradient(140deg, rgba(255,255,255,0.10), rgba(0,0,0,0.06) 42%, rgba(0,0,0,0.34)), #1A1714',
+          boxShadow: '0 16px 34px -18px rgba(26,23,20,0.6)',
         }}
       >
         <div className="relative z-10">
@@ -99,7 +99,7 @@ export default function PassengerHome() {
             ¿A dónde vamos?
           </p>
           <div className="inline-flex items-center gap-2.5 bg-white rounded-[13px] px-4 py-3 text-[15px] font-bold text-zipi-ink shadow-lg">
-            <span style={{ color: '#EF9008' }}>
+            <span style={{ color: '#1A1714' }}>
               <DuoIcon name="search" size={19} stroke={2.2} />
             </span>
             Buscar destino

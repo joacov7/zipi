@@ -35,8 +35,8 @@ export default function WalletPage() {
         className="relative rounded-[22px] p-6 overflow-hidden mb-4"
         style={{
           background:
-            'linear-gradient(140deg, rgba(255,255,255,0.14), rgba(0,0,0,0.06) 45%, rgba(0,0,0,0.32)), #EF9008',
-          boxShadow: '0 16px 34px -18px rgba(239,144,8,0.7)',
+            'linear-gradient(140deg, rgba(255,255,255,0.10), rgba(0,0,0,0.06) 45%, rgba(0,0,0,0.34)), #1A1714',
+          boxShadow: '0 16px 34px -18px rgba(26,23,20,0.6)',
           color: '#fff',
         }}
       >
