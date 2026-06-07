@@ -36,6 +36,8 @@ export default function DriverProfile() {
     vehicleYear: new Date().getFullYear(),
     vehicleColor: '',
     licenseNumber: '',
+    habilitacion: '',
+    seguro: '',
     truckType: TruckType.SMALL_TRUCK,
     machineryType: MachineryType.EXCAVATOR,
     capacityTons: '',
@@ -90,6 +92,14 @@ export default function DriverProfile() {
             <div className="bg-zipi-surface2 rounded-[13px] p-3">
               <p className="text-[11px] text-zipi-faint mb-0.5">Licencia</p>
               <p className="font-bold text-zipi-ink">{profile.licenseNumber}</p>
+            </div>
+            <div className="bg-zipi-surface2 rounded-[13px] p-3">
+              <p className="text-[11px] text-zipi-faint mb-0.5">Habilitación</p>
+              <p className="font-bold text-zipi-ink">{profile.habilitacion}</p>
+            </div>
+            <div className="bg-zipi-surface2 rounded-[13px] p-3">
+              <p className="text-[11px] text-zipi-faint mb-0.5">Seguro</p>
+              <p className="font-bold text-zipi-ink">{profile.seguro}</p>
             </div>
             <div className="bg-zipi-surface2 rounded-[13px] p-3">
               <p className="text-[11px] text-zipi-faint mb-1">Estado</p>
@@ -297,9 +307,29 @@ export default function DriverProfile() {
           />
         </div>
 
+        <div>
+          <label className="block text-[12.5px] font-bold text-zipi-ink mb-1.5">Habilitación</label>
+          <input
+            className="input"
+            placeholder="HAB-2024-001"
+            value={form.habilitacion}
+            onChange={(e) => setForm({ ...form, habilitacion: e.target.value })}
+          />
+        </div>
+
+        <div>
+          <label className="block text-[12.5px] font-bold text-zipi-ink mb-1.5">Póliza de seguro</label>
+          <input
+            className="input"
+            placeholder="POL-2024-001"
+            value={form.seguro}
+            onChange={(e) => setForm({ ...form, seguro: e.target.value })}
+          />
+        </div>
+
         <button
           onClick={() => createProfile.mutate()}
-          disabled={createProfile.isPending || !form.vehiclePlate || !form.vehicleModel || !form.licenseNumber}
+          disabled={createProfile.isPending || !form.vehiclePlate || !form.vehicleModel || !form.licenseNumber || !form.habilitacion || !form.seguro}
           className="h-[54px] w-full rounded-2xl font-bold text-white transition-opacity disabled:opacity-50"
           style={{ background: '#1A1714' }}
         >

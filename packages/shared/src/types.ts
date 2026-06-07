@@ -40,6 +40,8 @@ export interface DriverPublic {
   vehiclePlate: string;
   vehicleModel: string;
   licenseNumber: string;
+  habilitacion: string;
+  seguro: string;
   rating: number;
   totalTrips: number;
   isAvailable: boolean;

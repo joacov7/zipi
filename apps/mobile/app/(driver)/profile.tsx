@@ -19,6 +19,8 @@ export default function DriverProfileScreen() {
     vehicleYear: new Date().getFullYear(),
     vehicleColor: '',
     licenseNumber: '',
+    habilitacion: '',
+    seguro: '',
   });
 
   const { data: profile } = useQuery({
@@ -48,6 +50,8 @@ export default function DriverProfileScreen() {
           <Text style={styles.row}>🔤 Patente: {profile.vehiclePlate}</Text>
           <Text style={styles.row}>🎨 Color: {profile.vehicleColor}</Text>
           <Text style={styles.row}>📄 Licencia: {profile.licenseNumber}</Text>
+          <Text style={styles.row}>🪪 Habilitación: {profile.habilitacion}</Text>
+          <Text style={styles.row}>🛡 Seguro: {profile.seguro}</Text>
           <Text style={styles.row}>
             ✅ Estado: {profile.isVerified ? 'Verificado' : 'Pendiente de verificación'}
           </Text>
@@ -90,6 +94,8 @@ export default function DriverProfileScreen() {
           { key: 'vehicleModel', label: 'Modelo', placeholder: 'Toyota Corolla / Honda CB 190' },
           { key: 'vehicleColor', label: 'Color', placeholder: 'Blanco, Negro...' },
           { key: 'licenseNumber', label: 'Número de licencia', placeholder: 'LIC-XXXXXX' },
+          { key: 'habilitacion', label: 'Habilitación', placeholder: 'HAB-2024-001' },
+          { key: 'seguro', label: 'Póliza de seguro', placeholder: 'POL-2024-001' },
         ].map((field) => (
           <View key={field.key} style={{ marginTop: 14 }}>
             <Text style={styles.label}>{field.label}</Text>

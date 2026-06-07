@@ -75,6 +75,8 @@ model Driver {
   vehicleYear  Int
   vehicleColor String
   licenseNumber String     @unique
+  habilitacion  String
+  seguro        String
   isAvailable  Boolean     @default(false)
   isVerified   Boolean     @default(false)
   currentLat   Float?

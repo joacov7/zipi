@@ -29,6 +29,14 @@ export class CreateDriverProfileDto {
   @IsString()
   licenseNumber: string;
 
+  @ApiProperty({ example: 'HAB-2024-001' })
+  @IsString()
+  habilitacion: string;
+
+  @ApiProperty({ example: 'POL-2024-001' })
+  @IsString()
+  seguro: string;
+
   // Campos extra para camiones
   @ApiPropertyOptional({ enum: TruckType, description: 'Requerido si vehicleType = TRUCK' })
   @IsEnum(TruckType)
