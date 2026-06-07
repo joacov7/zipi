@@ -17,11 +17,11 @@ COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
 COPY packages/shared ./packages/shared
 COPY apps/api ./apps/api
-RUN cd apps/api && npx prisma generate && cd /app && pnpm --filter api build
+RUN cd apps/api && ./node_modules/.bin/prisma generate && cd /app && pnpm --filter api build
 
 # --- imagen final ---
 FROM node:20-alpine
-RUN npm install -g pnpm@10.33.0
+RUN npm install -g pnpm@10.33.0 prisma@5.22.0 ts-node@10.9.2
 WORKDIR /app
 ENV NODE_ENV=production
 
@@ -37,4 +37,4 @@ COPY apps/api/prisma ./apps/api/prisma
 WORKDIR /app/apps/api
 EXPOSE 4000
 
-CMD ["sh", "-c", "../../node_modules/.bin/prisma generate && ../../node_modules/.bin/prisma db push && ../../node_modules/.bin/ts-node prisma/seed.ts && node dist/main"]
+CMD ["sh", "-c", "prisma generate && prisma db push && ts-node prisma/seed.ts && node dist/main"]
