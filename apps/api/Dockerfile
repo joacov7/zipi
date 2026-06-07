@@ -37,4 +37,4 @@ COPY apps/api/prisma ./apps/api/prisma
 WORKDIR /app/apps/api
 EXPOSE 4000
 
-CMD ["sh", "-c", "../../node_modules/.bin/prisma generate && ../../node_modules/.bin/prisma db push && node dist/main"]
+CMD ["sh", "-c", "../../node_modules/.bin/prisma generate && ../../node_modules/.bin/prisma db push && ../../node_modules/.bin/ts-node prisma/seed.ts && node dist/main"]
