@@ -28,13 +28,14 @@ ENV NODE_ENV=production
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages/shared/package.json ./packages/shared/
 COPY apps/api/package.json ./apps/api/
-RUN pnpm install --frozen-lockfile --prod
+RUN pnpm install --frozen-lockfile
 
 COPY packages/shared ./packages/shared
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY apps/api/prisma ./apps/api/prisma
 
 WORKDIR /app/apps/api
 EXPOSE 4000
 
-CMD ["sh", "-c", "pnpm exec prisma generate && pnpm exec prisma db push && node dist/main"]
+CMD ["sh", "-c", "../../node_modules/.bin/prisma db push && node dist/main"]
