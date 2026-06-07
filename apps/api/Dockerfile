@@ -13,7 +13,7 @@ COPY packages/shared ./packages/shared
 COPY apps/api ./apps/api
 
 WORKDIR /app/apps/api
-RUN prisma generate && node_modules/.bin/nest build
+RUN prisma generate && /app/node_modules/.bin/nest build && echo "=== dist contents ===" && ls dist/
 
 EXPOSE 4000
 
