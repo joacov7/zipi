@@ -12,9 +12,10 @@ RUN pnpm install --frozen-lockfile
 COPY packages/shared ./packages/shared
 COPY apps/api ./apps/api
 
-WORKDIR /app/apps/api
-RUN prisma generate && /app/node_modules/.bin/nest build && echo "=== dist contents ===" && ls dist/
+WORKDIR /app
+RUN pnpm --filter api prisma:generate && pnpm --filter api build && echo "=== dist ===" && ls apps/api/dist/
 
+WORKDIR /app/apps/api
 EXPOSE 4000
 
-CMD ["sh", "-c", "prisma db push && ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts && node dist/main"]
+CMD ["sh", "-c", "prisma db push && ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts && node /app/apps/api/dist/main"]
