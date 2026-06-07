@@ -32,10 +32,9 @@ RUN pnpm install --frozen-lockfile
 
 COPY packages/shared ./packages/shared
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY apps/api/prisma ./apps/api/prisma
 
 WORKDIR /app/apps/api
 EXPOSE 4000
 
-CMD ["sh", "-c", "../../node_modules/.bin/prisma db push && node dist/main"]
+CMD ["sh", "-c", "../../node_modules/.bin/prisma generate && ../../node_modules/.bin/prisma db push && node dist/main"]
