@@ -19,19 +19,29 @@ services:
 
   api:
     build:
-      context: ./apps/api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/api/Dockerfile
     ports:
-      - "3000:3000"
+      - "4000:4000"
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/zipi_db
-      JWT_SECRET: change-me-in-production
-      JWT_REFRESH_SECRET: change-me-refresh-in-production
-      PORT: 3000
-      CORS_ORIGINS: http://localhost:5173
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/zipi_db?schema=public
+      JWT_SECRET: ${JWT_SECRET:-cambia-esto-en-produccion}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-cambia-esto-refresh-en-produccion}
+      PORT: 4000
+      CORS_ORIGINS: http://localhost:4001
+      NODE_ENV: production
     depends_on:
       postgres:
         condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "4001:80"
+    depends_on:
+      - api
 
 volumes:
   postgres_data:

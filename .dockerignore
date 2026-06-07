@@ -1,0 +1,15 @@
+node_modules
+**/node_modules
+.turbo
+**/.turbo
+dist
+**/dist
+.env
+**/.env
+.env.local
+**/.env.local
+.expo
+**/.expo
+*.log
+.DS_Store
+coverage
