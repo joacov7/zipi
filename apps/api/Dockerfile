@@ -21,6 +21,7 @@ RUN cd apps/api && ./node_modules/.bin/prisma generate && cd /app && pnpm --filt
 
 # --- imagen final ---
 FROM node:20-alpine
+RUN apk add --no-cache openssl
 RUN npm install -g pnpm@10.33.0 prisma@5.22.0 ts-node@10.9.2
 WORKDIR /app
 ENV NODE_ENV=production
