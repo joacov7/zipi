@@ -100,14 +100,16 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     client.leave(`driver:${data.driverId}:watchers`);
   }
 
-  // Emit to a specific user
   emitToUser(userId: string, event: string, data: any) {
     this.server.to(`user:${userId}`).emit(event, data);
   }
 
-  // Emit to all available drivers
+  emitToDriver(userId: string, event: string, data: any) {
+    this.server.to(`user:${userId}`).emit(event, data);
+  }
+
   emitToDrivers(event: string, data: any) {
-    this.server.emit(event, data); // Simplification: broadcast to all drivers
+    this.server.emit(event, data);
   }
 
   // Notify trip accepted

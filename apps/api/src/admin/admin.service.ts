@@ -1,30 +1,28 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { TripStatus, DeliveryStatus, FreightStatus } from '@prisma/client';
+import { PricingService } from '../pricing/pricing.service';
+import { TripStatus, DeliveryStatus } from '@prisma/client';
 
 @Injectable()
 export class AdminService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private pricing: PricingService,
+  ) {}
 
   async getDashboardStats() {
     const [
       totalUsers,
       totalDrivers,
       activeDrivers,
-      truckDrivers,
-      machineryDrivers,
       totalTrips,
       activeTrips,
       totalDeliveries,
       activeDeliveries,
-      totalFreights,
-      activeFreights,
     ] = await this.prisma.$transaction([
       this.prisma.user.count({ where: { role: 'PASSENGER' } }),
       this.prisma.driver.count(),
       this.prisma.driver.count({ where: { isAvailable: true } }),
-      this.prisma.driver.count({ where: { vehicleType: 'TRUCK' } }),
-      this.prisma.driver.count({ where: { vehicleType: 'HEAVY_MACHINERY' } }),
       this.prisma.trip.count(),
       this.prisma.trip.count({
         where: { status: { in: [TripStatus.PENDING, TripStatus.ACCEPTED, TripStatus.IN_PROGRESS] } },
@@ -37,44 +35,35 @@ export class AdminService {
           },
         },
       }),
-      this.prisma.freightRequest.count(),
-      this.prisma.freightRequest.count({
-        where: { status: { in: [FreightStatus.PENDING, FreightStatus.ACCEPTED, FreightStatus.IN_PROGRESS] } },
-      }),
     ]);
 
-    const [tripRevenue, deliveryRevenue, freightRevenue] = await this.prisma.$transaction([
+    const [tripRevenue, deliveryRevenue, tripCommission, deliveryCommission] = await this.prisma.$transaction([
       this.prisma.trip.aggregate({ _sum: { finalPrice: true }, where: { status: TripStatus.COMPLETED } }),
       this.prisma.delivery.aggregate({ _sum: { finalPrice: true }, where: { status: DeliveryStatus.DELIVERED } }),
-      this.prisma.freightRequest.aggregate({ _sum: { finalPrice: true }, where: { status: FreightStatus.COMPLETED } }),
+      this.prisma.trip.aggregate({ _sum: { commissionAmount: true }, where: { status: TripStatus.COMPLETED } }),
+      this.prisma.delivery.aggregate({ _sum: { commissionAmount: true }, where: { status: DeliveryStatus.DELIVERED } }),
     ]);
+
+    const totalRevenue = (tripRevenue._sum.finalPrice ?? 0) + (deliveryRevenue._sum.finalPrice ?? 0);
+    const totalCommission = (tripCommission._sum.commissionAmount ?? 0) + (deliveryCommission._sum.commissionAmount ?? 0);
 
     return {
       users: { total: totalUsers },
-      drivers: {
-        total: totalDrivers,
-        active: activeDrivers,
-        trucks: truckDrivers,
-        machinery: machineryDrivers,
-      },
+      drivers: { total: totalDrivers, active: activeDrivers },
       trips: { total: totalTrips, active: activeTrips },
       deliveries: { total: totalDeliveries, active: activeDeliveries },
-      freights: { total: totalFreights, active: activeFreights },
       revenue: {
         trips: tripRevenue._sum.finalPrice ?? 0,
         deliveries: deliveryRevenue._sum.finalPrice ?? 0,
-        freights: freightRevenue._sum.finalPrice ?? 0,
-        total:
-          (tripRevenue._sum.finalPrice ?? 0) +
-          (deliveryRevenue._sum.finalPrice ?? 0) +
-          (freightRevenue._sum.finalPrice ?? 0),
+        total: totalRevenue,
+        commission: totalCommission,
       },
       chart: await this.getLast7DaysChart(),
     };
   }
 
   private async getLast7DaysChart() {
-    const days: { date: string; trips: number; revenue: number }[] = [];
+    const days: { date: string; trips: number; revenue: number; commission: number }[] = [];
     for (let i = 6; i >= 0; i--) {
       const start = new Date();
       start.setDate(start.getDate() - i);
@@ -85,7 +74,7 @@ export class AdminService {
       const [count, rev] = await Promise.all([
         this.prisma.trip.count({ where: { createdAt: { gte: start, lte: end } } }),
         this.prisma.trip.aggregate({
-          _sum: { finalPrice: true },
+          _sum: { finalPrice: true, commissionAmount: true },
           where: { status: TripStatus.COMPLETED, createdAt: { gte: start, lte: end } },
         }),
       ]);
@@ -94,6 +83,7 @@ export class AdminService {
         date: start.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' }),
         trips: count,
         revenue: rev._sum.finalPrice ?? 0,
+        commission: rev._sum.commissionAmount ?? 0,
       });
     }
     return days;
@@ -137,7 +127,6 @@ export class AdminService {
   async toggleUserStatus(userId: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('Usuario no encontrado');
-
     return this.prisma.user.update({
       where: { id: userId },
       data: { isActive: !user.isActive },
@@ -148,7 +137,6 @@ export class AdminService {
   async verifyDriver(driverId: string) {
     const driver = await this.prisma.driver.findUnique({ where: { id: driverId } });
     if (!driver) throw new NotFoundException('Conductor no encontrado');
-
     return this.prisma.driver.update({
       where: { id: driverId },
       data: { isVerified: true },
@@ -159,27 +147,22 @@ export class AdminService {
   async listDrivers(page = 1, limit = 20, verified?: boolean) {
     const skip = (page - 1) * limit;
     const where = verified !== undefined ? { isVerified: verified } : {};
-
     const [drivers, total] = await this.prisma.$transaction([
       this.prisma.driver.findMany({
         where,
-        include: {
-          user: { select: { id: true, name: true, email: true, phone: true, isActive: true } },
-        },
+        include: { user: { select: { id: true, name: true, email: true, phone: true, isActive: true } } },
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
       }),
       this.prisma.driver.count({ where }),
     ]);
-
     return { data: drivers, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   async listTrips(page = 1, limit = 20, status?: TripStatus) {
     const skip = (page - 1) * limit;
     const where = status ? { status } : {};
-
     const [trips, total] = await this.prisma.$transaction([
       this.prisma.trip.findMany({
         where,
@@ -193,14 +176,12 @@ export class AdminService {
       }),
       this.prisma.trip.count({ where }),
     ]);
-
     return { data: trips, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   async listDeliveries(page = 1, limit = 20, status?: DeliveryStatus) {
     const skip = (page - 1) * limit;
     const where = status ? { status } : {};
-
     const [deliveries, total] = await this.prisma.$transaction([
       this.prisma.delivery.findMany({
         where,
@@ -214,28 +195,12 @@ export class AdminService {
       }),
       this.prisma.delivery.count({ where }),
     ]);
-
     return { data: deliveries, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
-  async listFreights(page = 1, limit = 20, status?: FreightStatus) {
-    const skip = (page - 1) * limit;
-    const where = status ? { status } : {};
-
-    const [freights, total] = await this.prisma.$transaction([
-      this.prisma.freightRequest.findMany({
-        where,
-        include: {
-          requester: { select: { id: true, name: true, phone: true } },
-          driver: { include: { user: { select: { id: true, name: true, phone: true } } } },
-        },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit,
-      }),
-      this.prisma.freightRequest.count({ where }),
-    ]);
-
-    return { data: freights, total, page, limit, totalPages: Math.ceil(total / limit) };
-  }
+  // Pricing config methods
+  getFareConfigs() { return this.pricing.getAllFareConfigs(); }
+  getCommissionConfigs() { return this.pricing.getAllCommissionConfigs(); }
+  updateFare(serviceType: string, data: any, adminId: string) { return this.pricing.updateFareConfig(serviceType, data, adminId); }
+  updateCommission(serviceType: string, data: any, adminId: string) { return this.pricing.updateCommissionConfig(serviceType, data, adminId); }
 }

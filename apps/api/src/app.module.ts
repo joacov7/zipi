@@ -10,14 +10,13 @@ import { TripsModule } from './trips/trips.module';
 import { DeliveriesModule } from './deliveries/deliveries.module';
 import { AdminModule } from './admin/admin.module';
 import { GatewayModule } from './gateway/gateway.module';
-import { FreightModule } from './freight/freight.module';
-import { ServicesModule } from './services/services.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ZonesModule } from './zones/zones.module';
 import { DiscountsModule } from './discounts/discounts.module';
 import { WalletModule } from './wallet/wallet.module';
-import { SharedTripsModule } from './shared-trips/shared-trips.module';
 import { SettingsModule } from './settings/settings.module';
+import { PricingModule } from './pricing/pricing.module';
+import { DispatchModule } from './dispatch/dispatch.module';
 
 @Module({
   imports: [
@@ -31,14 +30,13 @@ import { SettingsModule } from './settings/settings.module';
     DeliveriesModule,
     AdminModule,
     GatewayModule,
-    FreightModule,
-    ServicesModule,
     NotificationsModule,
     ZonesModule,
     DiscountsModule,
     WalletModule,
-    SharedTripsModule,
     SettingsModule,
+    PricingModule,
+    DispatchModule,
   ],
   providers: [
     {

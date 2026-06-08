@@ -1,6 +1,6 @@
-import { Controller, Get, Post, Patch, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Query, Body, Req, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { TripStatus, DeliveryStatus, FreightStatus } from '@prisma/client';
+import { TripStatus, DeliveryStatus } from '@prisma/client';
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -73,13 +73,28 @@ export class AdminController {
     return this.adminService.listDeliveries(+page, +limit, status);
   }
 
-  @Get('freights')
-  @ApiOperation({ summary: 'Listar fletes y solicitudes de maquinaria' })
-  listFreights(
-    @Query('page') page = 1,
-    @Query('limit') limit = 20,
-    @Query('status') status?: FreightStatus,
-  ) {
-    return this.adminService.listFreights(+page, +limit, status);
+  // Pricing & commission config
+  @Get('pricing/fares')
+  @ApiOperation({ summary: 'Obtener configuración de tarifas' })
+  getFares() {
+    return this.adminService.getFareConfigs();
+  }
+
+  @Get('pricing/commissions')
+  @ApiOperation({ summary: 'Obtener configuración de comisiones' })
+  getCommissions() {
+    return this.adminService.getCommissionConfigs();
+  }
+
+  @Patch('pricing/fares/:serviceType')
+  @ApiOperation({ summary: 'Actualizar tarifa por tipo de servicio' })
+  updateFare(@Param('serviceType') serviceType: string, @Body() body: any, @Req() req: any) {
+    return this.adminService.updateFare(serviceType, body, req.user.sub);
+  }
+
+  @Patch('pricing/commissions/:serviceType')
+  @ApiOperation({ summary: 'Actualizar comisión por tipo de servicio' })
+  updateCommission(@Param('serviceType') serviceType: string, @Body() body: any, @Req() req: any) {
+    return this.adminService.updateCommission(serviceType, body, req.user.sub);
   }
 }

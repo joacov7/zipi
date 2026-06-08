@@ -4,33 +4,46 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
-import { DeliveryStatus, VehicleType } from '@prisma/client';
+import { DeliveryStatus, WalletTransactionType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { PricingService } from '../pricing/pricing.service';
+import { DispatchService } from '../dispatch/dispatch.service';
+import { WalletService } from '../wallet/wallet.service';
 import {
   CreateDeliveryDto,
   UpdateDeliveryStatusDto,
   RateDeliveryDto,
   EstimateDeliveryPriceDto,
 } from './dto/delivery.dto';
-import { PRICING } from '@zipi/shared';
 
 @Injectable()
 export class DeliveriesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private pricing: PricingService,
+    private dispatch: DispatchService,
+    private wallet: WalletService,
+  ) {}
 
   async estimatePrice(dto: EstimateDeliveryPriceDto) {
     const distance = this.haversine(dto.pickupLat, dto.pickupLng, dto.dropoffLat, dto.dropoffLng);
-    const estimatedMinutes = Math.ceil((distance / 35) * 60); // avg 35 km/h moto
+    const estimatedMinutes = Math.ceil((distance / 35) * 60);
 
-    const { BASE_FARE, PER_KM, PER_MINUTE } = PRICING.MOTO;
-    const breakdown = {
-      baseFare: BASE_FARE,
-      distanceFare: Math.ceil(distance * PER_KM),
-      timeFare: Math.ceil(estimatedMinutes * PER_MINUTE),
+    const fare = await this.pricing.getFareConfig('MOTO');
+    if (!fare) throw new BadRequestException('Configuración de tarifas no disponible');
+
+    const estimatedPrice = Math.ceil(this.pricing.calculateFare('MOTO', fare, distance, estimatedMinutes));
+
+    return {
+      estimatedPrice,
+      estimatedMinutes,
+      distanceKm: Math.round(distance * 10) / 10,
+      breakdown: {
+        baseFare: fare.baseFare,
+        distanceFare: Math.ceil(distance * fare.perKm),
+        timeFare: Math.ceil(estimatedMinutes * fare.perMinute),
+      },
     };
-    const estimatedPrice = breakdown.baseFare + breakdown.distanceFare + breakdown.timeFare;
-
-    return { estimatedPrice, estimatedMinutes, distanceKm: Math.round(distance * 10) / 10, breakdown };
   }
 
   async create(senderId: string, dto: CreateDeliveryDto) {
@@ -41,16 +54,29 @@ export class DeliveriesService {
       dropoffLng: dto.dropoffLng,
     });
 
-    return this.prisma.delivery.create({
+    const delivery = await this.prisma.delivery.create({
       data: {
         senderId,
-        ...dto,
+        pickupLat: dto.pickupLat,
+        pickupLng: dto.pickupLng,
+        pickupAddress: dto.pickupAddress,
+        dropoffLat: dto.dropoffLat,
+        dropoffLng: dto.dropoffLng,
+        dropoffAddress: dto.dropoffAddress,
+        packageDescription: dto.packageDescription,
+        recipientName: dto.recipientName,
+        recipientPhone: dto.recipientPhone,
         estimatedPrice: estimate.estimatedPrice,
       },
       include: {
         sender: { select: { id: true, name: true, phone: true, avatarUrl: true } },
       },
     });
+
+    // Fire-and-forget auto-dispatch
+    this.dispatch.dispatchDelivery(delivery.id).catch(() => {});
+
+    return delivery;
   }
 
   async findById(id: string) {
@@ -70,9 +96,6 @@ export class DeliveriesService {
   async acceptDelivery(driverUserId: string, deliveryId: string) {
     const driver = await this.prisma.driver.findUnique({ where: { userId: driverUserId } });
     if (!driver) throw new NotFoundException('Conductor no encontrado');
-    if (driver.vehicleType !== VehicleType.MOTORCYCLE) {
-      throw new ForbiddenException('Solo los motociclistas pueden aceptar envíos');
-    }
     if (!driver.isAvailable) throw new ForbiddenException('No estás disponible');
 
     const delivery = await this.prisma.delivery.findUnique({ where: { id: deliveryId } });
@@ -115,12 +138,30 @@ export class DeliveriesService {
 
     const updateData: any = { status: dto.status };
     if (dto.cancelReason) updateData.cancelReason = dto.cancelReason;
+
     if (dto.status === DeliveryStatus.DELIVERED) {
-      updateData.finalPrice = delivery.estimatedPrice;
+      const finalPrice = delivery.estimatedPrice;
+      const commissionCfg = await this.pricing.getCommissionConfig('MOTO');
+      const commissionPct = commissionCfg?.percentage ?? 12;
+      const { commissionRate, commissionAmount, driverPayout } = this.pricing.calculateCommission(finalPrice, commissionPct);
+
+      updateData.finalPrice = finalPrice;
+      updateData.commissionRate = commissionRate;
+      updateData.commissionAmount = commissionAmount;
+      updateData.driverPayout = driverPayout;
+
       await this.prisma.driver.update({
         where: { id: driver!.id },
-        data: { totalTrips: { increment: 1 } },
+        data: { totalTrips: { increment: 1 }, isAvailable: true },
       });
+
+      await this.wallet.credit(
+        delivery.driver!.user.id,
+        driverPayout,
+        WalletTransactionType.DRIVER_PAYOUT,
+        `Pago envío ${deliveryId.slice(-6).toUpperCase()}`,
+        deliveryId,
+      );
     }
 
     return this.prisma.delivery.update({ where: { id: deliveryId }, data: updateData });
@@ -138,19 +179,14 @@ export class DeliveriesService {
 
     if (!isSender && !isDriver) throw new ForbiddenException('No autorizado');
 
-    const updateData: any = isSender
-      ? { senderRating: dto.rating }
-      : { driverRating: dto.rating };
-
+    const updateData: any = isSender ? { senderRating: dto.rating } : { driverRating: dto.rating };
     return this.prisma.delivery.update({ where: { id: deliveryId }, data: updateData });
   }
 
   async getPendingDeliveries() {
     return this.prisma.delivery.findMany({
       where: { status: DeliveryStatus.PENDING },
-      include: {
-        sender: { select: { id: true, name: true, avatarUrl: true } },
-      },
+      include: { sender: { select: { id: true, name: true, avatarUrl: true } } },
       orderBy: { createdAt: 'asc' },
     });
   }
