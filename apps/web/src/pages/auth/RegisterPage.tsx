@@ -28,7 +28,8 @@ export default function RegisterPage() {
       setAuth(data.user, data.accessToken, data.refreshToken);
       navigate('/');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al registrarse');
+      const msg = err?.response?.data?.message;
+      setError(Array.isArray(msg) ? msg.join('\n') : (msg || 'Error al registrarse'));
     } finally {
       setLoading(false);
     }

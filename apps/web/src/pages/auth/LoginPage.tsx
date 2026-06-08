@@ -19,7 +19,8 @@ export default function LoginPage() {
       setAuth(data.user, data.accessToken, data.refreshToken);
       navigate('/');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al iniciar sesión');
+      const msg = err?.response?.data?.message;
+      setError(Array.isArray(msg) ? msg.join('\n') : (msg || 'Error al iniciar sesión'));
     } finally {
       setLoading(false);
     }

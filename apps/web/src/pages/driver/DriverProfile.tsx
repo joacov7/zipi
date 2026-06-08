@@ -63,7 +63,10 @@ export default function DriverProfile() {
       setSuccess('Perfil creado. Esperá la verificación del admin.');
       queryClient.invalidateQueries({ queryKey: ['driver-profile'] });
     },
-    onError: (err: any) => setError(err.response?.data?.message || 'Error'),
+    onError: (err: any) => {
+      const msg = err?.response?.data?.message;
+      setError(Array.isArray(msg) ? msg.join('\n') : (msg || 'Error al guardar'));
+    },
   });
 
   if (profile) {

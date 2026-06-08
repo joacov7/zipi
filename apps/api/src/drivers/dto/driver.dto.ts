@@ -1,4 +1,5 @@
 import { IsString, IsEnum, IsInt, Min, Max, IsNumber, IsOptional, IsBoolean } from 'class-validator';
+import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { MachineryType, TruckType, VehicleType } from '@prisma/client';
 
@@ -83,10 +84,12 @@ export class ToggleAvailabilityDto {
 
 export class NearbyDriversDto {
   @ApiProperty({ description: 'Latitud del usuario' })
+  @Type(() => Number)
   @IsNumber()
   lat: number;
 
   @ApiProperty({ description: 'Longitud del usuario' })
+  @Type(() => Number)
   @IsNumber()
   lng: number;
 
@@ -96,6 +99,7 @@ export class NearbyDriversDto {
   vehicleType?: VehicleType;
 
   @ApiPropertyOptional({ default: 5, maximum: 50 })
+  @Type(() => Number)
   @IsNumber()
   @Max(50)
   @IsOptional()

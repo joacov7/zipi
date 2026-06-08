@@ -34,6 +34,10 @@ export default function RegisterScreen() {
       Alert.alert('Error', 'Completá todos los campos');
       return;
     }
+    if (form.password.length < 8) {
+      Alert.alert('Error', 'La contraseña debe tener al menos 8 caracteres');
+      return;
+    }
     setLoading(true);
     try {
       const { data } = await api.post('/auth/register', form);
