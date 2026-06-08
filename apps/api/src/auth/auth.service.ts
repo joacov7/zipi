@@ -105,6 +105,15 @@ export class AuthService {
     return this.generateTokens(stored.user);
   }
 
+  async promoteToDriver(userId: string) {
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: { role: 'DRIVER' as any },
+      select: { id: true, name: true, email: true, role: true },
+    });
+    return user;
+  }
+
   async logout(userId: string) {
     await this.prisma.refreshToken.deleteMany({ where: { userId } });
     return { message: 'Sesión cerrada' };
