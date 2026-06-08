@@ -17,6 +17,7 @@ import { ZonesModule } from './zones/zones.module';
 import { DiscountsModule } from './discounts/discounts.module';
 import { WalletModule } from './wallet/wallet.module';
 import { SharedTripsModule } from './shared-trips/shared-trips.module';
+import { SettingsModule } from './settings/settings.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { SharedTripsModule } from './shared-trips/shared-trips.module';
     DiscountsModule,
     WalletModule,
     SharedTripsModule,
+    SettingsModule,
   ],
   providers: [
     {

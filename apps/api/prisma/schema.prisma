@@ -499,3 +499,11 @@ enum ParticipantStatus {
   CONFIRMED
   CANCELLED
 }
+
+model AppSetting {
+  key       String   @id
+  value     String   @default("true")
+  updatedAt DateTime @updatedAt
+
+  @@map("app_settings")
+}

@@ -1,8 +1,9 @@
 import { ReactNode } from 'react';
 import { useNotifications } from '../../hooks/useNotifications';
+import { useModuleSettings } from '../../hooks/useModuleSettings';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../stores/auth.store';
-import { UserRole } from '@zipi/shared';
+import { UserRole, AppModule } from '@zipi/shared';
 import {
   Home,
   Car,
@@ -21,60 +22,68 @@ import {
   Gift,
   UsersRound,
   ChevronRight,
+  ToggleLeft,
 } from 'lucide-react';
 
 interface NavItem {
   to: string;
   label: string;
   icon: ReactNode;
+  module?: AppModule;
 }
 
-function getNavItems(role: string): NavItem[] {
-  if (role === UserRole.ADMIN) {
-    return [
-      { to: '/admin', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
-      { to: '/admin/users', label: 'Usuarios', icon: <Users size={18} /> },
-      { to: '/admin/drivers', label: 'Conductores', icon: <Truck size={18} /> },
-      { to: '/admin/trips', label: 'Viajes', icon: <MapPin size={18} /> },
-      { to: '/admin/zones', label: 'Zonas', icon: <MapPin size={18} /> },
-      { to: '/admin/discounts', label: 'Descuentos', icon: <Tag size={18} /> },
-    ];
-  }
-  if (role === UserRole.DRIVER) {
-    return [
-      { to: '/driver', label: 'Inicio', icon: <Home size={18} /> },
-      { to: '/driver/history', label: 'Historial', icon: <History size={18} /> },
-      { to: '/driver/profile', label: 'Perfil', icon: <User size={18} /> },
-    ];
-  }
-  if (role === UserRole.CONTRACTOR) {
-    return [
-      { to: '/contractor', label: 'Inicio', icon: <Home size={18} /> },
-      { to: '/contractor/jobs', label: 'Mis trabajos', icon: <HardHat size={18} /> },
-      { to: '/contractor/profile', label: 'Perfil', icon: <User size={18} /> },
-    ];
-  }
-  return [
-    { to: '/home', label: 'Inicio', icon: <Home size={18} /> },
-    { to: '/request-trip', label: 'Pedir Remis', icon: <Car size={18} /> },
-    { to: '/request-delivery', label: 'Motomandado', icon: <Package size={18} /> },
-    { to: '/request-freight', label: 'Fletes / Maquinaria', icon: <Truck size={18} /> },
-    { to: '/services', label: 'Servicios', icon: <Wrench size={18} /> },
-    { to: '/history', label: 'Actividad', icon: <History size={18} /> },
-    { to: '/shared-trips', label: 'Viajes compartidos', icon: <UsersRound size={18} /> },
-    { to: '/wallet', label: 'Billetera', icon: <Wallet size={18} /> },
-    { to: '/referral', label: 'Referir amigos', icon: <Gift size={18} /> },
-    { to: '/profile', label: 'Mi perfil', icon: <User size={18} /> },
-  ];
-}
+const ADMIN_NAV: NavItem[] = [
+  { to: '/admin', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
+  { to: '/admin/users', label: 'Usuarios', icon: <Users size={18} /> },
+  { to: '/admin/drivers', label: 'Conductores', icon: <Truck size={18} /> },
+  { to: '/admin/trips', label: 'Viajes', icon: <MapPin size={18} /> },
+  { to: '/admin/zones', label: 'Zonas', icon: <MapPin size={18} /> },
+  { to: '/admin/discounts', label: 'Descuentos', icon: <Tag size={18} /> },
+  { to: '/admin/modules', label: 'Módulos', icon: <ToggleLeft size={18} /> },
+];
+
+const DRIVER_NAV: NavItem[] = [
+  { to: '/driver', label: 'Inicio', icon: <Home size={18} /> },
+  { to: '/driver/history', label: 'Historial', icon: <History size={18} /> },
+  { to: '/driver/profile', label: 'Perfil', icon: <User size={18} /> },
+];
+
+const CONTRACTOR_NAV: NavItem[] = [
+  { to: '/contractor', label: 'Inicio', icon: <Home size={18} /> },
+  { to: '/contractor/jobs', label: 'Mis trabajos', icon: <HardHat size={18} /> },
+  { to: '/contractor/profile', label: 'Perfil', icon: <User size={18} /> },
+];
+
+const PASSENGER_NAV: NavItem[] = [
+  { to: '/home', label: 'Inicio', icon: <Home size={18} /> },
+  { to: '/request-trip', label: 'Pedir Remis', icon: <Car size={18} />, module: AppModule.REMIS },
+  { to: '/request-delivery', label: 'Motomandado', icon: <Package size={18} />, module: AppModule.MOTO_DELIVERY },
+  { to: '/request-freight', label: 'Fletes / Maquinaria', icon: <Truck size={18} />, module: AppModule.FREIGHT },
+  { to: '/services', label: 'Servicios', icon: <Wrench size={18} />, module: AppModule.SERVICES },
+  { to: '/history', label: 'Actividad', icon: <History size={18} /> },
+  { to: '/shared-trips', label: 'Viajes compartidos', icon: <UsersRound size={18} />, module: AppModule.SHARED_TRIPS },
+  { to: '/wallet', label: 'Billetera', icon: <Wallet size={18} /> },
+  { to: '/referral', label: 'Referir amigos', icon: <Gift size={18} /> },
+  { to: '/profile', label: 'Mi perfil', icon: <User size={18} /> },
+];
 
 export default function Layout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
   useNotifications();
+  const { data: modules } = useModuleSettings();
 
-  const navItems = getNavItems(user?.role || '');
+  let baseNav: NavItem[];
+  if (user?.role === UserRole.ADMIN) baseNav = ADMIN_NAV;
+  else if (user?.role === UserRole.DRIVER) baseNav = DRIVER_NAV;
+  else if (user?.role === UserRole.CONTRACTOR) baseNav = CONTRACTOR_NAV;
+  else baseNav = PASSENGER_NAV;
+
+  const navItems = baseNav.filter((item) => {
+    if (!item.module) return true;
+    return modules ? (modules[item.module] ?? true) : true;
+  });
 
   const handleLogout = () => {
     logout();

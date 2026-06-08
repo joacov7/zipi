@@ -4,10 +4,16 @@ import { useAuthStore } from '../../src/stores/auth.store';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
+import { useModule } from '../../src/hooks/useModuleSettings';
+import { AppModule } from '@zipi/shared';
 
 export default function PassengerHomeScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
+  const remisOn = useModule(AppModule.REMIS);
+  const motoOn = useModule(AppModule.MOTO_DELIVERY);
+  const freightOn = useModule(AppModule.FREIGHT);
+  const sharedOn = useModule(AppModule.SHARED_TRIPS);
 
   const { data: tripsData } = useQuery({
     queryKey: ['my-trips-mobile'],
@@ -25,7 +31,7 @@ export default function PassengerHomeScreen() {
       </View>
 
       {/* Hero CTA */}
-      <TouchableOpacity
+      {remisOn && <TouchableOpacity
         style={styles.heroCta}
         onPress={() => router.push('/(passenger)/request-trip')}
         activeOpacity={0.88}
@@ -38,44 +44,51 @@ export default function PassengerHomeScreen() {
         </View>
         <View style={styles.heroCircle1} />
         <View style={styles.heroCircle2} />
-      </TouchableOpacity>
+      </TouchableOpacity>}
 
       {/* Service grid */}
-      <View style={styles.serviceRow}>
-        <TouchableOpacity
-          style={[styles.serviceCard, { backgroundColor: '#f0fdf4' }]}
-          onPress={() => router.push('/(passenger)/request-delivery')}
-        >
-          <Ionicons name="cube" size={30} color="#16a34a" />
-          <Text style={styles.serviceTitle}>Motomandado</Text>
-          <Text style={[styles.serviceSubtitle, { color: '#16a34a' }]}>Desde $1.500</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.serviceCard, { backgroundColor: '#fef9ec' }]}
-          onPress={() => router.push('/(passenger)/request-freight')}
-        >
-          <Ionicons name="construct" size={30} color="#EF9008" />
-          <Text style={styles.serviceTitle}>Fletes</Text>
-          <Text style={styles.serviceSubtitle}>Desde $8.000</Text>
-        </TouchableOpacity>
-      </View>
-
-      <TouchableOpacity
-        style={styles.listCard}
-        onPress={() => router.push('/(passenger)/shared-trips')}
-      >
-        <View style={styles.listCardLeft}>
-          <View style={[styles.listCardIcon, { backgroundColor: '#f5f3ff' }]}>
-            <Ionicons name="people" size={22} color="#7c3aed" />
-          </View>
-          <View>
-            <Text style={styles.listCardTitle}>Viajes compartidos</Text>
-            <Text style={styles.listCardSubtitle}>Viajá con otros y dividí el costo</Text>
-          </View>
+      {(motoOn || freightOn) && (
+        <View style={styles.serviceRow}>
+          {motoOn && (
+            <TouchableOpacity
+              style={[styles.serviceCard, { backgroundColor: '#f0fdf4' }]}
+              onPress={() => router.push('/(passenger)/request-delivery')}
+            >
+              <Ionicons name="cube" size={30} color="#16a34a" />
+              <Text style={styles.serviceTitle}>Motomandado</Text>
+              <Text style={[styles.serviceSubtitle, { color: '#16a34a' }]}>Desde $1.500</Text>
+            </TouchableOpacity>
+          )}
+          {freightOn && (
+            <TouchableOpacity
+              style={[styles.serviceCard, { backgroundColor: '#fef9ec' }]}
+              onPress={() => router.push('/(passenger)/request-freight')}
+            >
+              <Ionicons name="construct" size={30} color="#EF9008" />
+              <Text style={styles.serviceTitle}>Fletes</Text>
+              <Text style={styles.serviceSubtitle}>Desde $8.000</Text>
+            </TouchableOpacity>
+          )}
         </View>
-        <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
-      </TouchableOpacity>
+      )}
+
+      {sharedOn && (
+        <TouchableOpacity
+          style={styles.listCard}
+          onPress={() => router.push('/(passenger)/shared-trips')}
+        >
+          <View style={styles.listCardLeft}>
+            <View style={[styles.listCardIcon, { backgroundColor: '#f5f3ff' }]}>
+              <Ionicons name="people" size={22} color="#7c3aed" />
+            </View>
+            <View>
+              <Text style={styles.listCardTitle}>Viajes compartidos</Text>
+              <Text style={styles.listCardSubtitle}>Viajá con otros y dividí el costo</Text>
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
+        </TouchableOpacity>
+      )}
 
       {recentTrips.length > 0 && (
         <View style={{ paddingHorizontal: 16 }}>

@@ -97,6 +97,14 @@ export enum JobStatus {
   DISPUTED        = 'DISPUTED',
 }
 
+export enum AppModule {
+  REMIS = 'REMIS',
+  MOTO_DELIVERY = 'MOTO_DELIVERY',
+  FREIGHT = 'FREIGHT',
+  SHARED_TRIPS = 'SHARED_TRIPS',
+  SERVICES = 'SERVICES',
+}
+
 export enum SocketEvent {
   // Driver events
   DRIVER_LOCATION_UPDATE = 'driver:location:update',

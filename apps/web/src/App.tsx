@@ -43,6 +43,10 @@ import AdminDrivers from './pages/admin/AdminDrivers';
 import AdminTrips from './pages/admin/AdminTrips';
 import AdminZones from './pages/admin/AdminZones';
 import AdminDiscounts from './pages/admin/AdminDiscounts';
+import AdminModules from './pages/admin/AdminModules';
+
+// Landing
+import LandingPage from './pages/landing/LandingPage';
 
 // Layout
 import Layout from './components/layout/Layout';
@@ -57,11 +61,11 @@ function PrivateRoute({ children, roles }: { children: JSX.Element; roles?: User
 }
 
 function RoleRedirect() {
-  const { user } = useAuthStore();
-  if (!user) return <Navigate to="/login" />;
-  if (user.role === UserRole.ADMIN) return <Navigate to="/admin" />;
-  if (user.role === UserRole.DRIVER) return <Navigate to="/driver" />;
-  if (user.role === UserRole.CONTRACTOR) return <Navigate to="/contractor" />;
+  const { user, isAuthenticated } = useAuthStore();
+  if (!isAuthenticated()) return <LandingPage />;
+  if (user!.role === UserRole.ADMIN) return <Navigate to="/admin" />;
+  if (user!.role === UserRole.DRIVER) return <Navigate to="/driver" />;
+  if (user!.role === UserRole.CONTRACTOR) return <Navigate to="/contractor" />;
   return <Navigate to="/home" />;
 }
 
@@ -71,6 +75,7 @@ export default function App() {
       {/* Public */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/landing" element={<LandingPage />} />
       <Route path="/" element={<RoleRedirect />} />
 
       {/* Passenger */}
@@ -314,6 +319,14 @@ export default function App() {
         element={
           <PrivateRoute roles={[UserRole.ADMIN]}>
             <Layout><AdminDiscounts /></Layout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/admin/modules"
+        element={
+          <PrivateRoute roles={[UserRole.ADMIN]}>
+            <Layout><AdminModules /></Layout>
           </PrivateRoute>
         }
       />
