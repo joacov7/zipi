@@ -23,11 +23,18 @@ export default function RegisterPage() {
     setError('');
     setLoading(true);
     try {
-      const payload = { ...form, referralCode: form.referralCode.trim() || undefined };
+      const wantsDriver = form.role === 'DRIVER';
+      const { role, referralCode, ...rest } = form;
+      const payload = { ...rest, referralCode: referralCode.trim() || undefined };
       const { data } = await api.post('/auth/register', payload);
       setAuth(data.user, data.accessToken, data.refreshToken);
-      if (data.user.role === 'DRIVER') navigate('/driver');
-      else navigate('/home');
+      if (wantsDriver) {
+        const { data: promoted } = await api.patch('/auth/me/role/driver');
+        setAuth({ ...data.user, role: promoted.role }, data.accessToken, data.refreshToken);
+        navigate('/driver');
+      } else {
+        navigate('/home');
+      }
     } catch (err: any) {
       const msg = err?.response?.data?.message;
       setError(Array.isArray(msg) ? msg.join('\n') : (msg || 'Error al registrarse'));
