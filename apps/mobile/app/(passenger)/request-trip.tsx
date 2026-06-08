@@ -29,6 +29,7 @@ export default function RequestTripScreen() {
   const [destAddress, setDestAddress] = useState('');
   const [selectedDest, setSelectedDest] = useState<(typeof QUICK_DESTINATIONS)[0] | null>(null);
   const [origin, setOrigin] = useState({ lat: DEFAULT_MAP_CENTER.lat, lng: DEFAULT_MAP_CENTER.lng, address: 'Mi ubicación' });
+  const [city, setCity] = useState('');
   const [locating, setLocating] = useState(true);
 
   useEffect(() => {
@@ -38,7 +39,9 @@ export default function RequestTripScreen() {
         if (status !== 'granted') { setLocating(false); return; }
         const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
         const [geo] = await Location.reverseGeocodeAsync({ latitude: loc.coords.latitude, longitude: loc.coords.longitude });
-        const address = geo ? `${geo.street ?? ''} ${geo.streetNumber ?? ''}, ${geo.city ?? ''}`.trim().replace(/^,|,$/g, '').trim() : 'Mi ubicación GPS';
+        const detectedCity = geo?.city ?? geo?.subregion ?? '';
+        const address = geo ? `${geo.street ?? ''} ${geo.streetNumber ?? ''}, ${detectedCity}`.trim().replace(/^,|,$/g, '').trim() : 'Mi ubicación GPS';
+        setCity(detectedCity);
         setOrigin({ lat: loc.coords.latitude, lng: loc.coords.longitude, address });
       } catch {
         // keep default
@@ -61,9 +64,10 @@ export default function RequestTripScreen() {
         destLat = dest.lat;
         destLng = dest.lng;
       } else {
-        const results = await Location.geocodeAsync(destAddress);
+        const query = city ? `${destAddress}, ${city}` : destAddress;
+        const results = await Location.geocodeAsync(query);
         if (!results || results.length === 0) {
-          Alert.alert('Error', 'No se encontró la dirección. Intentá con más detalle (ej: "Corrientes 1234, Buenos Aires")');
+          Alert.alert('Error', 'No se encontró la dirección. Intentá con más detalle (ej: "Corrientes 1234")');
           setLoading(false);
           return;
         }
