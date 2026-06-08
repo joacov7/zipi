@@ -18,65 +18,71 @@ export default function PassengerHomeScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
+      {/* Hero header */}
       <View style={styles.header}>
-        <Text style={styles.greeting}>Hola, {user?.name?.split(' ')[0]} 👋</Text>
+        <Text style={styles.greeting}>Hola, {user?.name?.split(' ')[0]}</Text>
         <Text style={styles.subGreeting}>¿Qué necesitás hoy?</Text>
       </View>
 
+      {/* Hero CTA */}
+      <TouchableOpacity
+        style={styles.heroCta}
+        onPress={() => router.push('/(passenger)/request-trip')}
+        activeOpacity={0.88}
+      >
+        <Text style={styles.heroLabel}>VIAJÁ AHORA</Text>
+        <Text style={styles.heroTitle}>¿A dónde vamos?</Text>
+        <View style={styles.heroSearch}>
+          <Ionicons name="search" size={18} color="#1A1714" />
+          <Text style={styles.heroSearchText}>Buscar destino</Text>
+        </View>
+        <View style={styles.heroCircle1} />
+        <View style={styles.heroCircle2} />
+      </TouchableOpacity>
+
+      {/* Service grid */}
       <View style={styles.serviceRow}>
         <TouchableOpacity
-          style={[styles.serviceCard, { backgroundColor: '#fef9ec' }]}
-          onPress={() => router.push('/(passenger)/request-trip')}
+          style={[styles.serviceCard, { backgroundColor: '#f0fdf4' }]}
+          onPress={() => router.push('/(passenger)/request-delivery')}
         >
-          <Ionicons name="car" size={32} color="#ef9008" />
-          <Text style={styles.serviceTitle}>Pedir Remis</Text>
-          <Text style={styles.serviceSubtitle}>Desde $2.500</Text>
+          <Ionicons name="cube" size={30} color="#16a34a" />
+          <Text style={styles.serviceTitle}>Motomandado</Text>
+          <Text style={[styles.serviceSubtitle, { color: '#16a34a' }]}>Desde $1.500</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.serviceCard, { backgroundColor: '#eff6ff' }]}
-          onPress={() => router.push('/(passenger)/request-delivery')}
+          style={[styles.serviceCard, { backgroundColor: '#fef9ec' }]}
+          onPress={() => router.push('/(passenger)/request-freight')}
         >
-          <Ionicons name="cube" size={32} color="#3b82f6" />
-          <Text style={styles.serviceTitle}>Motomandado</Text>
-          <Text style={[styles.serviceSubtitle, { color: '#2563eb' }]}>Desde $1.500</Text>
+          <Ionicons name="construct" size={30} color="#EF9008" />
+          <Text style={styles.serviceTitle}>Fletes</Text>
+          <Text style={styles.serviceSubtitle}>Desde $8.000</Text>
         </TouchableOpacity>
       </View>
 
       <TouchableOpacity
-        style={styles.freightCard}
-        onPress={() => router.push('/(passenger)/request-freight')}
-      >
-        <View style={styles.freightCardLeft}>
-          <Ionicons name="construct" size={28} color="#f59e0b" />
-          <View style={{ marginLeft: 12 }}>
-            <Text style={styles.freightTitle}>Camiones y Maquinaria</Text>
-            <Text style={styles.freightSubtitle}>Fletes, excavadoras, grúas y más</Text>
-          </View>
-        </View>
-        <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.freightCard}
+        style={styles.listCard}
         onPress={() => router.push('/(passenger)/shared-trips')}
       >
-        <View style={styles.freightCardLeft}>
-          <Ionicons name="people" size={28} color="#8b5cf6" />
-          <View style={{ marginLeft: 12 }}>
-            <Text style={styles.freightTitle}>Viajes compartidos</Text>
-            <Text style={styles.freightSubtitle}>Viajá con otros y dividí el costo</Text>
+        <View style={styles.listCardLeft}>
+          <View style={[styles.listCardIcon, { backgroundColor: '#f5f3ff' }]}>
+            <Ionicons name="people" size={22} color="#7c3aed" />
+          </View>
+          <View>
+            <Text style={styles.listCardTitle}>Viajes compartidos</Text>
+            <Text style={styles.listCardSubtitle}>Viajá con otros y dividí el costo</Text>
           </View>
         </View>
-        <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+        <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
       </TouchableOpacity>
 
       {recentTrips.length > 0 && (
-        <View>
+        <View style={{ paddingHorizontal: 16 }}>
           <Text style={styles.sectionTitle}>Viajes recientes</Text>
           {recentTrips.map((trip: any) => (
             <View key={trip.id} style={styles.tripCard}>
-              <Ionicons name="car-outline" size={20} color="#9ca3af" />
+              <View style={styles.tripDot} />
               <View style={{ flex: 1, marginLeft: 12 }}>
                 <Text style={styles.tripDest} numberOfLines={1}>{trip.destAddress}</Text>
                 <Text style={styles.tripDate}>
@@ -96,46 +102,63 @@ export default function PassengerHomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f9fafb' },
-  header: { backgroundColor: '#ef9008', padding: 24, paddingTop: 60 },
+  header: { backgroundColor: '#1A1714', padding: 24, paddingTop: 60, paddingBottom: 20 },
   greeting: { fontSize: 24, fontWeight: 'bold', color: '#fff' },
-  subGreeting: { fontSize: 14, color: 'rgba(255,255,255,0.85)', marginTop: 4 },
-  serviceRow: { flexDirection: 'row', gap: 12, padding: 16 },
-  serviceCard: {
-    flex: 1,
-    borderRadius: 20,
-    padding: 20,
-    alignItems: 'center',
-    gap: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+  subGreeting: { fontSize: 14, color: 'rgba(255,255,255,0.6)', marginTop: 4 },
+  heroCta: {
+    backgroundColor: '#1A1714',
+    marginHorizontal: 16,
+    marginTop: -1,
+    marginBottom: 16,
+    borderRadius: 22,
+    padding: 22,
+    overflow: 'hidden',
   },
-  serviceTitle: { fontSize: 15, fontWeight: '700', color: '#111827' },
-  serviceSubtitle: { fontSize: 12, color: '#d46a04', fontWeight: '500' },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#111827', paddingHorizontal: 16, marginTop: 8, marginBottom: 8 },
-  tripCard: {
+  heroLabel: { fontSize: 11, fontWeight: '700', color: '#EF9008', letterSpacing: 2, marginBottom: 6 },
+  heroTitle: { fontSize: 26, fontWeight: '800', color: '#fff', marginBottom: 16 },
+  heroSearch: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 10,
     backgroundColor: '#fff',
-    borderRadius: 16,
-    marginHorizontal: 16,
-    marginBottom: 8,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 1,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    alignSelf: 'flex-start',
   },
-  tripDest: { fontSize: 14, fontWeight: '600', color: '#111827' },
-  tripDate: { fontSize: 12, color: '#9ca3af', marginTop: 2 },
-  tripPrice: { fontSize: 14, fontWeight: '700', color: '#111827' },
-  freightCard: {
+  heroSearchText: { fontSize: 15, fontWeight: '700', color: '#1A1714' },
+  heroCircle1: {
+    position: 'absolute', width: 140, height: 140, borderRadius: 70,
+    backgroundColor: 'rgba(255,255,255,0.04)', right: -30, top: -30,
+  },
+  heroCircle2: {
+    position: 'absolute', width: 90, height: 90, borderRadius: 45,
+    backgroundColor: 'rgba(239,144,8,0.12)', right: 20, bottom: -20,
+  },
+  serviceRow: { flexDirection: 'row', gap: 12, paddingHorizontal: 16, marginBottom: 12 },
+  serviceCard: {
+    flex: 1, borderRadius: 20, padding: 18, gap: 8,
+    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 8, elevation: 1,
+  },
+  serviceTitle: { fontSize: 14, fontWeight: '700', color: '#1A1714' },
+  serviceSubtitle: { fontSize: 12, color: '#EF9008', fontWeight: '600' },
+  listCard: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     backgroundColor: '#fff', borderRadius: 20, marginHorizontal: 16, marginBottom: 16,
-    padding: 16, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
+    padding: 16, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 8, elevation: 1,
   },
-  freightCardLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
-  freightTitle: { fontSize: 15, fontWeight: '700', color: '#111827' },
-  freightSubtitle: { fontSize: 12, color: '#9ca3af', marginTop: 2 },
+  listCardLeft: { flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1 },
+  listCardIcon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  listCardTitle: { fontSize: 15, fontWeight: '700', color: '#1A1714' },
+  listCardSubtitle: { fontSize: 12, color: '#9ca3af', marginTop: 2 },
+  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#1A1714', marginBottom: 10, marginTop: 4 },
+  tripCard: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#fff', borderRadius: 16, marginBottom: 8, padding: 16,
+    shadowColor: '#000', shadowOpacity: 0.03, shadowRadius: 6, elevation: 1,
+  },
+  tripDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#EF9008' },
+  tripDest: { fontSize: 14, fontWeight: '600', color: '#1A1714' },
+  tripDate: { fontSize: 12, color: '#9ca3af', marginTop: 2 },
+  tripPrice: { fontSize: 14, fontWeight: '700', color: '#EF9008' },
 });

@@ -365,15 +365,15 @@ const styles = StyleSheet.create({
   hourBtn: {
     paddingHorizontal: 16, paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: '#e5e7eb', backgroundColor: '#fff',
   },
-  hourBtnActive: { backgroundColor: '#f59e0b', borderColor: '#f59e0b' },
+  hourBtnActive: { backgroundColor: '#1A1714', borderColor: '#1A1714' },
   hourBtnText: { fontSize: 14, fontWeight: '600', color: '#374151' },
   priceRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
   priceLabel: { color: '#6b7280', fontSize: 14 },
   priceValue: { color: '#374151', fontSize: 14 },
   totalRow: { borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingTop: 12, marginTop: 4 },
   totalLabel: { fontWeight: '700', fontSize: 16, color: '#111827' },
-  totalValue: { fontWeight: '700', fontSize: 20, color: '#f59e0b' },
-  btn: { backgroundColor: '#f59e0b', borderRadius: 16, padding: 18, alignItems: 'center' },
+  totalValue: { fontWeight: '700', fontSize: 20, color: '#EF9008' },
+  btn: { backgroundColor: '#1A1714', borderRadius: 16, padding: 18, alignItems: 'center' },
   btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
   bigTypeBtn: {
     borderWidth: 2, borderRadius: 20, padding: 24, alignItems: 'center',

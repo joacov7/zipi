@@ -120,7 +120,7 @@ export default function RegisterScreen() {
 
 const styles = StyleSheet.create({
   container: { padding: 24, paddingTop: 60, gap: 12 },
-  title: { fontSize: 26, fontWeight: 'bold', color: '#111827', marginBottom: 8 },
+  title: { fontSize: 26, fontWeight: 'bold', color: '#1A1714', marginBottom: 8 },
   label: { fontSize: 14, fontWeight: '500', color: '#374151', marginTop: 4 },
   input: {
     borderWidth: 1,
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 16,
     fontSize: 16,
-    color: '#111827',
+    color: '#1A1714',
     backgroundColor: '#f9fafb',
   },
   roleRow: { flexDirection: 'row', gap: 10 },
@@ -140,11 +140,11 @@ const styles = StyleSheet.create({
     padding: 14,
     alignItems: 'center',
   },
-  roleBtnActive: { borderColor: '#ef9008', backgroundColor: '#fef9ec' },
+  roleBtnActive: { borderColor: '#1A1714', backgroundColor: '#f5f4f2' },
   roleBtnText: { fontSize: 14, fontWeight: '500', color: '#6b7280' },
-  roleBtnTextActive: { color: '#d46a04' },
+  roleBtnTextActive: { color: '#1A1714', fontWeight: '700' },
   button: {
-    backgroundColor: '#ef9008',
+    backgroundColor: '#1A1714',
     borderRadius: 14,
     padding: 16,
     alignItems: 'center',
@@ -153,5 +153,5 @@ const styles = StyleSheet.create({
   buttonDisabled: { opacity: 0.6 },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   link: { textAlign: 'center', color: '#6b7280' },
-  linkBold: { color: '#ef9008', fontWeight: '600' },
+  linkBold: { color: '#EF9008', fontWeight: '600' },
 });

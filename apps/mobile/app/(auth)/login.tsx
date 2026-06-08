@@ -100,14 +100,14 @@ const styles = StyleSheet.create({
   logo: {
     width: 72,
     height: 72,
-    backgroundColor: '#ef9008',
+    backgroundColor: '#1A1714',
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
   },
-  logoText: { fontSize: 36, fontWeight: 'bold', color: '#fff' },
-  title: { fontSize: 28, fontWeight: 'bold', color: '#111827' },
+  logoText: { fontSize: 36, fontWeight: 'bold', color: '#EF9008' },
+  title: { fontSize: 28, fontWeight: 'bold', color: '#1A1714' },
   subtitle: { fontSize: 14, color: '#6b7280', marginTop: 4 },
   form: { gap: 12 },
   input: {
@@ -116,11 +116,11 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 16,
     fontSize: 16,
-    color: '#111827',
+    color: '#1A1714',
     backgroundColor: '#f9fafb',
   },
   button: {
-    backgroundColor: '#ef9008',
+    backgroundColor: '#1A1714',
     borderRadius: 14,
     padding: 16,
     alignItems: 'center',
@@ -129,5 +129,5 @@ const styles = StyleSheet.create({
   buttonDisabled: { opacity: 0.6 },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   link: { textAlign: 'center', color: '#6b7280', marginTop: 8 },
-  linkBold: { color: '#ef9008', fontWeight: '600' },
+  linkBold: { color: '#EF9008', fontWeight: '600' },
 });

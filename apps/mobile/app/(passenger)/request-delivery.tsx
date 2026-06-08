@@ -150,13 +150,13 @@ const styles = StyleSheet.create({
   card: { backgroundColor: '#fff', borderRadius: 20, padding: 20, marginBottom: 16, elevation: 1 },
   cardTitle: { fontSize: 16, fontWeight: '700', color: '#111827', marginBottom: 10 },
   detail: { fontSize: 14, color: '#374151', marginBottom: 6 },
-  bigPrice: { fontSize: 28, fontWeight: 'bold', color: '#3b82f6' },
+  bigPrice: { fontSize: 28, fontWeight: 'bold', color: '#EF9008' },
   eta: { color: '#9ca3af', fontSize: 13, marginTop: 4 },
   inputLabel: { fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 6 },
   input: {
     borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 12, padding: 14,
     fontSize: 15, color: '#111827', backgroundColor: '#f9fafb',
   },
-  btn: { backgroundColor: '#3b82f6', borderRadius: 16, padding: 18, alignItems: 'center' },
+  btn: { backgroundColor: '#1A1714', borderRadius: 16, padding: 18, alignItems: 'center' },
   btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 });

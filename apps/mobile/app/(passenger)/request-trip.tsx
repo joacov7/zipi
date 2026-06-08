@@ -242,6 +242,6 @@ const styles = StyleSheet.create({
   totalLabel: { fontWeight: '700', fontSize: 16, color: '#111827' },
   totalValue: { fontWeight: '700', fontSize: 18, color: '#ef9008' },
   etaText: { color: '#9ca3af', fontSize: 13, marginTop: 8 },
-  btn: { backgroundColor: '#ef9008', borderRadius: 16, padding: 18, alignItems: 'center' },
+  btn: { backgroundColor: '#1A1714', borderRadius: 16, padding: 18, alignItems: 'center' },
   btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 });

@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
   loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   container: { flex: 1, padding: 24, justifyContent: 'center', backgroundColor: '#f9fafb' },
   header: {
-    backgroundColor: '#ef9008', padding: 20, paddingTop: 60,
+    backgroundColor: '#1A1714', padding: 20, paddingTop: 60,
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start',
   },
   headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#fff' },
@@ -338,6 +338,6 @@ const styles = StyleSheet.create({
   acceptBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
   offlineText: { textAlign: 'center', color: '#9ca3af', fontSize: 14, marginTop: 32, paddingHorizontal: 24 },
   title: { fontSize: 22, fontWeight: 'bold', color: '#111827', marginBottom: 20, textAlign: 'center' },
-  btn: { backgroundColor: '#ef9008', borderRadius: 16, padding: 16, alignItems: 'center' },
+  btn: { backgroundColor: '#1A1714', borderRadius: 16, padding: 16, alignItems: 'center' },
   btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 });

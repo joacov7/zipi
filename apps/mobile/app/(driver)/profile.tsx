@@ -142,6 +142,6 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 12, padding: 14,
     fontSize: 15, color: '#111827', backgroundColor: '#f9fafb',
   },
-  btn: { backgroundColor: '#ef9008', borderRadius: 16, padding: 18, alignItems: 'center' },
+  btn: { backgroundColor: '#1A1714', borderRadius: 16, padding: 18, alignItems: 'center' },
   btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 });
