@@ -6,6 +6,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../src/services/api';
+import { apiError } from '../../src/utils/error';
 import { VehicleType } from '@zipi/shared';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -34,10 +35,7 @@ export default function DriverProfileScreen() {
       Alert.alert('¡Perfil creado!', 'El admin revisará y verificará tu cuenta.');
       queryClient.invalidateQueries({ queryKey: ['driver-profile-mobile'] });
     },
-    onError: (err: any) => {
-      const msg = err.response?.data?.message;
-      Alert.alert('Error', Array.isArray(msg) ? msg.join('\n') : (msg || 'Error al guardar'));
-    },
+    onError: (err: any) => Alert.alert('Error', apiError(err, 'Error al guardar')),
   });
 
   if (profile) {
