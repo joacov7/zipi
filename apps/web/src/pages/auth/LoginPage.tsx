@@ -17,7 +17,10 @@ export default function LoginPage() {
     try {
       const { data } = await api.post('/auth/login', form);
       setAuth(data.user, data.accessToken, data.refreshToken);
-      navigate('/');
+      if (data.user.role === 'DRIVER') navigate('/driver');
+      else if (data.user.role === 'ADMIN') navigate('/admin');
+      else if (data.user.role === 'CONTRACTOR') navigate('/contractor');
+      else navigate('/home');
     } catch (err: any) {
       const msg = err?.response?.data?.message;
       setError(Array.isArray(msg) ? msg.join('\n') : (msg || 'Error al iniciar sesión'));

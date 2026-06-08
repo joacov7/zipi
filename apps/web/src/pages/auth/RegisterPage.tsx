@@ -26,7 +26,9 @@ export default function RegisterPage() {
       const payload = { ...form, referralCode: form.referralCode.trim() || undefined };
       const { data } = await api.post('/auth/register', payload);
       setAuth(data.user, data.accessToken, data.refreshToken);
-      navigate('/');
+      if (data.user.role === 'DRIVER') navigate('/driver');
+      else if (data.user.role === 'ADMIN') navigate('/admin');
+      else navigate('/home');
     } catch (err: any) {
       const msg = err?.response?.data?.message;
       setError(Array.isArray(msg) ? msg.join('\n') : (msg || 'Error al registrarse'));
