@@ -20,7 +20,7 @@ export default function SharedTripDetailScreen() {
   const joinMutation = useMutation({
     mutationFn: () => api.post(`/shared-trips/${id}/join`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['shared-trip-mobile', id] }),
-    onError: (err: any) => Alert.alert('Error', ((_m = err?.response?.data?.message), Array.isArray(_m) ? _m.join('\n') : (_m || 'No se pudo solicitar el lugar'),
+    onError: (err: any) => Alert.alert('Error', apiError(err, 'No se pudo solicitar el lugar')),
   });
 
   const leaveMutation = useMutation({
