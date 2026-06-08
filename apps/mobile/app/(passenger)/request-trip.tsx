@@ -54,8 +54,22 @@ export default function RequestTripScreen() {
 
     setLoading(true);
     try {
-      const destLat = dest?.lat ?? DEFAULT_MAP_CENTER.lat - 0.05;
-      const destLng = dest?.lng ?? DEFAULT_MAP_CENTER.lng - 0.05;
+      let destLat: number;
+      let destLng: number;
+
+      if (dest) {
+        destLat = dest.lat;
+        destLng = dest.lng;
+      } else {
+        const results = await Location.geocodeAsync(destAddress);
+        if (!results || results.length === 0) {
+          Alert.alert('Error', 'No se encontró la dirección. Intentá con más detalle (ej: "Corrientes 1234, Buenos Aires")');
+          setLoading(false);
+          return;
+        }
+        destLat = results[0].latitude;
+        destLng = results[0].longitude;
+      }
       const { data } = await api.post('/trips/estimate', {
         originLat: origin.lat,
         originLng: origin.lng,

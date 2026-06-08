@@ -34,7 +34,7 @@ export default function LoginScreen() {
         router.replace('/(passenger)/home');
       }
     } catch (err: any) {
-      Alert.alert('Debug', `URL: ${process.env.EXPO_PUBLIC_API_URL}\nMsg: ${err.message}\nResp: ${JSON.stringify(err.response?.data)}`);
+      Alert.alert('Error', err.response?.data?.message || 'Credenciales incorrectas');
     } finally {
       setLoading(false);
     }
