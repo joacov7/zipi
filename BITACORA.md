@@ -146,8 +146,41 @@ App de ride-sharing y servicios para Argentina (Buenos Aires). Soporta viajes en
 
 ---
 
+### Landing page (`apps/web/src/pages/landing/LandingPage.tsx`) *(nuevo)*
+- Página pública en `/` para usuarios no autenticados
+- Secciones: hero (#1A1714 + #EF9008), 3 servicios (Remis, Moto mandados, Fletes), cómo funciona, CTA conductor, footer
+- Usuarios autenticados en `/` son redirigidos a su dashboard por rol
+
+### Sistema de módulos
+
+#### API (`apps/api/src/settings/`)
+- Nuevo módulo NestJS: `SettingsModule` con controller y service
+- `GET /settings/modules` — público, devuelve estado de cada módulo
+- `PATCH /settings/modules/:key` — admin, activa/desactiva un módulo
+- `AppSetting` model en Prisma (`key` PK, `value` string, `updatedAt`)
+- Se inicializa con todos los módulos activos en `onModuleInit`
+
+#### Shared (`packages/shared/src/enums.ts`)
+- Nuevo enum `AppModule`: `REMIS`, `MOTO_DELIVERY`, `FREIGHT`, `SHARED_TRIPS`, `SERVICES`
+
+#### Web admin (`apps/web/src/pages/admin/AdminModules.tsx`) *(nuevo)*
+- Página en `/admin/modules` con toggle switches para cada módulo
+- Actualización en tiempo real via React Query
+- Agregado al nav del admin en Layout.tsx
+
+#### Web hook (`apps/web/src/hooks/useModuleSettings.ts`) *(nuevo)*
+- `useModuleSettings()` — fetcha `/settings/modules` con staleTime 30s
+- Layout sidebar de pasajero filtra ítems según módulos habilitados
+
+#### Mobile hook (`apps/mobile/src/hooks/useModuleSettings.ts`) *(nuevo)*
+- `useModuleSettings()` y `useModule(key)` helpers
+- Home screen del pasajero oculta Hero CTA, cards de servicios y viajes compartidos según estado del módulo
+
+---
+
 ## Pendientes / Próximas funcionalidades
 
 - [ ] **Selector de cantidad de pasajeros** en solicitud de viaje (mobile + web + backend)
 - [ ] Verificar que registro de nuevos usuarios muestre error real si el email/teléfono ya existe
 - [ ] Testing end-to-end del flujo de registro y login con el fix de `AllExceptionsFilter`
+- [ ] Correr `pnpm --filter api prisma:push` en producción para crear la tabla `app_settings`
