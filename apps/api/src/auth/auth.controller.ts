@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Req, HttpCode, HttpStatus, Patch } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Req, HttpCode, HttpStatus, Patch, Query } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RegisterDto, LoginDto, RefreshTokenDto } from './dto/auth.dto';
@@ -10,15 +10,9 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('register')
-  @ApiOperation({ summary: 'Registro de nuevo usuario (pasajero)' })
-  register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto, 'PASSENGER');
-  }
-
-  @Post('register/driver')
-  @ApiOperation({ summary: 'Registro de nuevo conductor' })
-  registerDriver(@Body() dto: RegisterDto) {
-    return this.authService.register(dto, 'DRIVER');
+  @ApiOperation({ summary: 'Registro de nuevo usuario' })
+  register(@Body() dto: RegisterDto, @Query('role') role?: string) {
+    return this.authService.register(dto, role === 'DRIVER' ? 'DRIVER' : 'PASSENGER');
   }
 
   @Post('login')

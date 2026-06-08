@@ -25,8 +25,7 @@ export default function RegisterPage() {
     try {
       const { role, referralCode, ...rest } = form;
       const payload = { ...rest, referralCode: referralCode.trim() || undefined };
-      const endpoint = role === 'DRIVER' ? '/auth/register/driver' : '/auth/register';
-      const { data } = await api.post(endpoint, payload);
+      const { data } = await api.post(`/auth/register?role=${role}`, payload);
       setAuth(data.user, data.accessToken, data.refreshToken);
       if (data.user.role === 'DRIVER') navigate('/driver');
       else navigate('/home');
