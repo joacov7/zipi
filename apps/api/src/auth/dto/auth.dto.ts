@@ -19,6 +19,8 @@ export class RegisterDto {
   @MinLength(8)
   password: string;
 
+  role?: string;
+
   @ApiPropertyOptional()
   @IsString()
   @IsOptional()

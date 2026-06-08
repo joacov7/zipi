@@ -23,9 +23,8 @@ export default function RegisterPage() {
     setError('');
     setLoading(true);
     try {
-      const { role, referralCode, ...rest } = form;
-      const payload = { ...rest, referralCode: referralCode.trim() || undefined };
-      const { data } = await api.post(`/auth/register?role=${role}`, payload);
+      const payload = { ...form, referralCode: form.referralCode.trim() || undefined };
+      const { data } = await api.post('/auth/register', payload);
       setAuth(data.user, data.accessToken, data.refreshToken);
       if (data.user.role === 'DRIVER') navigate('/driver');
       else navigate('/home');
