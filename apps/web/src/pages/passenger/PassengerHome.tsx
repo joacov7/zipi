@@ -26,26 +26,6 @@ const SERVICES = [
     tint: 'rgba(47,107,236,0.12)',
     to: '/request-delivery',
   },
-  {
-    id: 'flete',
-    name: 'Fletes y Maquinaria',
-    tagline: 'Camiones, excavadoras, grúas y más',
-    from: 8000,
-    iconName: 'truck',
-    accent: '#0E9E6E',
-    tint: 'rgba(14,158,110,0.12)',
-    to: '/request-freight',
-  },
-  {
-    id: 'servicios',
-    name: 'Servicios del Hogar',
-    tagline: 'Plomeros, electricistas, pintores y más',
-    from: null,
-    iconName: 'wrench',
-    accent: '#6D5AE0',
-    tint: 'rgba(109,90,224,0.12)',
-    to: '/services',
-  },
 ];
 
 const STATUS_COLORS: Record<string, string> = {
@@ -118,7 +98,7 @@ export default function PassengerHome() {
         <div className="flex items-baseline justify-between mb-3">
           <h2 className="text-[17px] font-bold text-zipi-ink tracking-tight">Nuestros servicios</h2>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {SERVICES.map((s) => (
             <Link
               key={s.id}
@@ -154,29 +134,6 @@ export default function PassengerHome() {
           ))}
         </div>
       </div>
-
-      {/* Viajes compartidos entry */}
-      <Link
-        to="/shared-trips"
-        className="flex items-center gap-3 bg-white border border-zipi-rim rounded-[22px] p-4 shadow-zipi hover:shadow-md transition-shadow"
-      >
-        <div
-          className="w-[46px] h-[46px] rounded-[13px] flex items-center justify-center shrink-0"
-          style={{ background: 'rgba(239,144,8,0.12)', color: '#EF9008' }}
-        >
-          <DuoIcon name="users" size={24} stroke={2} />
-        </div>
-        <div className="flex-1">
-          <p className="text-[15px] font-bold text-zipi-ink">Viajes compartidos</p>
-          <p className="text-[12.5px] text-zipi-muted">Compartí el viaje y dividí el costo</p>
-        </div>
-        <span
-          className="text-[11px] font-bold rounded-full px-2.5 py-1 shrink-0"
-          style={{ background: 'rgba(239,144,8,0.12)', color: '#EF9008' }}
-        >
-          Nuevo
-        </span>
-      </Link>
 
       {/* Referral promo */}
       <button
