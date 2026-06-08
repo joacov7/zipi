@@ -23,11 +23,11 @@ export default function RegisterPage() {
     setError('');
     setLoading(true);
     try {
-      const payload = { ...form, referralCode: form.referralCode.trim() || undefined };
+      const { role, ...rest } = form;
+      const payload = { ...rest, referralCode: rest.referralCode.trim() || undefined };
       const { data } = await api.post('/auth/register', payload);
       setAuth(data.user, data.accessToken, data.refreshToken);
-      if (data.user.role === 'DRIVER') navigate('/driver');
-      else if (data.user.role === 'ADMIN') navigate('/admin');
+      if (role === 'DRIVER') navigate('/driver');
       else navigate('/home');
     } catch (err: any) {
       const msg = err?.response?.data?.message;

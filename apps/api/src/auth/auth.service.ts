@@ -60,7 +60,7 @@ export class AuthService {
         email: dto.email,
         phone: dto.phone,
         password,
-        role: dto.role ?? 'PASSENGER',
+        role: 'PASSENGER',
         referralCode,
         referredBy: referrerId,
       },
