@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Location from 'expo-location';
+import { apiError } from '../../src/utils/error';
 import { api } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { DEFAULT_MAP_CENTER } from '@zipi/shared';
@@ -84,7 +85,7 @@ export default function RequestTripScreen() {
       if (dest) setSelectedDest(dest);
       setStep('confirm');
     } catch (err: any) {
-      Alert.alert('Error', err.response?.data?.message || 'Error al estimar');
+      Alert.alert('Error', apiError(err, 'Error al estimar'));
     } finally {
       setLoading(false);
     }
@@ -103,7 +104,7 @@ export default function RequestTripScreen() {
       });
       router.replace(`/(passenger)/trip-tracking?id=${data.id}`);
     } catch (err: any) {
-      Alert.alert('Error', err.response?.data?.message || 'Error al solicitar');
+      Alert.alert('Error', apiError(err, 'Error al solicitar'));
     } finally {
       setLoading(false);
     }

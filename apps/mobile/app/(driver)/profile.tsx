@@ -34,7 +34,10 @@ export default function DriverProfileScreen() {
       Alert.alert('¡Perfil creado!', 'El admin revisará y verificará tu cuenta.');
       queryClient.invalidateQueries({ queryKey: ['driver-profile-mobile'] });
     },
-    onError: (err: any) => Alert.alert('Error', err.response?.data?.message || 'Error'),
+    onError: (err: any) => {
+      const msg = err.response?.data?.message;
+      Alert.alert('Error', Array.isArray(msg) ? msg.join('\n') : (msg || 'Error al guardar'));
+    },
   });
 
   if (profile) {

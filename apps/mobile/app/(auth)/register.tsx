@@ -12,6 +12,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { apiError } from '../../src/utils/error';
 import { api } from '../../src/services/api';
 import { useAuthStore } from '../../src/stores/auth.store';
 import { UserRole } from '@zipi/shared';
@@ -43,7 +44,7 @@ export default function RegisterScreen() {
         router.replace('/(passenger)/home');
       }
     } catch (err: any) {
-      Alert.alert('Error', err.response?.data?.message || 'Error al registrarse');
+      Alert.alert('Error', apiError(err, 'Error al registrarse'));
     } finally {
       setLoading(false);
     }

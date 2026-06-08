@@ -4,6 +4,7 @@ import {
   ScrollView, Alert, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { apiError } from '../../src/utils/error';
 import { api } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { DEFAULT_MAP_CENTER } from '@zipi/shared';
@@ -37,7 +38,7 @@ export default function RequestDeliveryScreen() {
       setEstimate(data);
       setStep('confirm');
     } catch (err: any) {
-      Alert.alert('Error', err.response?.data?.message || 'Error al estimar');
+      Alert.alert('Error', apiError(err, 'Error al estimar'));
     } finally {
       setLoading(false);
     }
@@ -61,7 +62,7 @@ export default function RequestDeliveryScreen() {
         { text: 'OK', onPress: () => router.replace('/(passenger)/home') },
       ]);
     } catch (err: any) {
-      Alert.alert('Error', err.response?.data?.message || 'Error al enviar');
+      Alert.alert('Error', apiError(err, 'Error al enviar'));
     } finally {
       setLoading(false);
     }
