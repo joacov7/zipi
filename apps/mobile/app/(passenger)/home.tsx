@@ -18,7 +18,7 @@ export default function PassengerHomeScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
-      {/* Hero header */}
+      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.greeting}>Hola, {user?.name?.split(' ')[0]}</Text>
         <Text style={styles.subGreeting}>¿Qué necesitás hoy?</Text>
@@ -102,9 +102,9 @@ export default function PassengerHomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f9fafb' },
-  header: { backgroundColor: '#1A1714', padding: 24, paddingTop: 60, paddingBottom: 20 },
-  greeting: { fontSize: 24, fontWeight: 'bold', color: '#fff' },
-  subGreeting: { fontSize: 14, color: 'rgba(255,255,255,0.6)', marginTop: 4 },
+  header: { backgroundColor: '#f9fafb', padding: 24, paddingTop: 60, paddingBottom: 8 },
+  greeting: { fontSize: 24, fontWeight: 'bold', color: '#1A1714' },
+  subGreeting: { fontSize: 14, color: '#9ca3af', marginTop: 4 },
   heroCta: {
     backgroundColor: '#1A1714',
     marginHorizontal: 16,
