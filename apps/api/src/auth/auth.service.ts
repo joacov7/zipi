@@ -31,7 +31,7 @@ export class AuthService {
     private wallet: WalletService,
   ) {}
 
-  async register(dto: RegisterDto) {
+  async register(dto: RegisterDto, role: 'PASSENGER' | 'DRIVER' = 'PASSENGER') {
     const existing = await this.prisma.user.findFirst({
       where: { OR: [{ email: dto.email }, { phone: dto.phone }] },
     });
@@ -60,7 +60,7 @@ export class AuthService {
         email: dto.email,
         phone: dto.phone,
         password,
-        role: (dto.role ?? 'PASSENGER') as any,
+        role: role as any,
         referralCode,
         referredBy: referrerId,
       },

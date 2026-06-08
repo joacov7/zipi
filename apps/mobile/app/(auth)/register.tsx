@@ -40,7 +40,9 @@ export default function RegisterScreen() {
     }
     setLoading(true);
     try {
-      const { data } = await api.post('/auth/register', form);
+      const { role, ...payload } = form;
+      const endpoint = role === UserRole.DRIVER ? '/auth/register/driver' : '/auth/register';
+      const { data } = await api.post(endpoint, payload);
       await setAuth(data.user, data.accessToken, data.refreshToken);
       if (data.user.role === UserRole.DRIVER) {
         router.replace('/(driver)/home');

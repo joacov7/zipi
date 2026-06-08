@@ -10,9 +10,15 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('register')
-  @ApiOperation({ summary: 'Registro de nuevo usuario' })
+  @ApiOperation({ summary: 'Registro de nuevo usuario (pasajero)' })
   register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto);
+    return this.authService.register(dto, 'PASSENGER');
+  }
+
+  @Post('register/driver')
+  @ApiOperation({ summary: 'Registro de nuevo conductor' })
+  registerDriver(@Body() dto: RegisterDto) {
+    return this.authService.register(dto, 'DRIVER');
   }
 
   @Post('login')
